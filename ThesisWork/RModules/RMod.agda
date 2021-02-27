@@ -21,15 +21,124 @@ open import Cubical.Algebra.Module.Base
 open import Cubical.Algebra.Ring
 open import Cubical.Foundations.Structure
 open import ThesisWork.RModules.RModuleHomomorphism
+open import ThesisWork.RModules.CommutativeRing
+open import ThesisWork.RModules.RModule
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv
 
-RModPreCat : {ℓ : Level} → (R : Ring {ℓ}) → Precategory (ℓ-suc ℓ) ℓ
-RModPreCat R = record {ob = LeftModule R ;
-                       hom = λ M N → LeftModuleHomomorphism R M N ;
+RModPreCat : {ℓ : Level} → (R : CommutativeRing {ℓ}) → Precategory (ℓ-suc ℓ) ℓ
+RModPreCat R = record {ob = Module R ;
+                       hom = λ M N → ModuleHomomorphism R M N ;
                        idn = λ x → ModuleHomoId ;
                        seq = ModuleHomoComp ;
                        seq-λ = ModuleHomoIdLeftComp ;
                        seq-ρ = ModuleHomoIdRightComp ;
                        seq-α = λ f g h → sym (ModuleHomoCompAsso f g h)}
 
--- RModIsCategory : {ℓ : Level} → (R : Ring {ℓ}) → isCategory (RModPreCat R)
--- RModIsCategory R = record {homIsSet = λ {M} {N} → {!!}}
+-- RModIsCategory : {ℓ : Level} → (R : CommutativeRing {ℓ}) → isCategory (RModPreCat R)
+-- RModIsCategory R = record {homIsSet = λ {M} {N} → {!isSetModuleHomo!}}
+
+-- --******************************************** isUnivalent ***********************************************************
+
+-- CatIso→Section : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      {x y : ob (RModPreCat R)} →
+--                      (catIso : CatIso {𝒞 = (RModPreCat R)} x y) →
+--                      section (ModuleHomomorphism.h (CatIso.h catIso)) (ModuleHomomorphism.h (CatIso.h⁻¹ catIso))
+-- CatIso→Section (catiso h h⁻¹ sec ret) x i = ModuleHomomorphism.h (sec i) x
+
+-- CatIso→Retract : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      {x y : ob (RModPreCat R)} →
+--                      (catIso : CatIso {𝒞 = (RModPreCat R)} x y) →
+--                      retract (ModuleHomomorphism.h (CatIso.h catIso)) (ModuleHomomorphism.h (CatIso.h⁻¹ catIso))
+-- CatIso→Retract (catiso h h⁻¹ sec ret) x i = ModuleHomomorphism.h (ret i) x
+
+-- CatIso→IsoModules : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      {x y : ob (RModPreCat R)} →
+--                      (CatIso {𝒞 = (RModPreCat R)} x y) → Iso ⟨ x ⟩M ⟨ y ⟩M
+-- CatIso→IsoModules catIso@(catiso h h⁻¹ sec ret) = record {fun = ModuleHomomorphism.h h ;
+--                                                           inv = ModuleHomomorphism.h h⁻¹ ;
+--                                                           rightInv = (CatIso→Section catIso) ;
+--                                                           leftInv = CatIso→Retract catIso }
+
+-- CatIso→EquivModules : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      {x y : ob (RModPreCat R)} →
+--                      (CatIso {𝒞 = (RModPreCat R)} x y) → ⟨ x ⟩M ≃ ⟨ y ⟩M
+-- CatIso→EquivModules catIso = isoToEquiv (CatIso→IsoModules catIso)
+
+-- CatIso→ModuleEquiv : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      {x y : ob (RModPreCat R)} →
+--                      (CatIso {𝒞 = (RModPreCat R)} x y) → (ModuleEquiv x y)
+-- CatIso→ModuleEquiv catIso = record { e = CatIso→EquivModules catIso ;
+--                                      isHom+ = ModuleHomomorphism.linear (CatIso.h catIso) ;
+--                                      comm⋆ = ModuleHomomorphism.scalar (CatIso.h catIso) }
+
+-- ModuleEquiv→CatIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      {x y : ob (RModPreCat R)} →
+--                      (ModuleEquiv x y) → (CatIso {𝒞 = (RModPreCat R)} x y)
+-- ModuleEquiv→CatIso modEq@(moduleIso e isHom+ comm⋆) =
+--   record { h = moduleHomo (equivFun e) isHom+ comm⋆ ; 
+--            h⁻¹ = moduleHomo (equivFun (invEquiv e)) (isHom+Flip modEq) (comm⋆Flip modEq) ;
+--            sec = ModuleHomo≡ (funExt (λ x → modEq→RightCompId modEq x)) ;
+--            ret = ModuleHomo≡ (funExt (λ x → modEq→LeftCompId modEq x))}
+
+-- CatIso→EquivIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                        {x y : ob (RModPreCat R)} → (z : ModuleEquiv x y) → 
+--                        CatIso→EquivModules (ModuleEquiv→CatIso z) ≡ ModuleEquiv.e z
+-- CatIso→EquivIso z = equivEq (funExt (λ x → refl))
+-- --  CatIso→EquivModules (ModuleEquiv→CatIso z) .fst x                          ≡⟨ refl ⟩
+-- --  isoToEquiv (CatIso→IsoModules (ModuleEquiv→CatIso z)) .fst x               ≡⟨ refl ⟩
+-- --  Iso.fun (CatIso→IsoModules (ModuleEquiv→CatIso z)) x                       ≡⟨ refl ⟩
+-- --  ModuleHomomorphism.h (CatIso.h (ModuleEquiv→CatIso z)) x                   ≡⟨ refl ⟩
+-- --  (equivFun (ModuleEquiv.e z)) x                                             ≡⟨ refl ⟩
+-- --  (fst (ModuleEquiv.e z)) x ∎)) 
+
+-- -- CatIso→EquivModules (ModuleEquiv→CatIso z) .fst x ≡ ModuleEquiv.e z .fst x
+
+-- Equiv→CatIsoIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                        {x y : ob (RModPreCat R)} → (z : CatIso x y) → 
+--                        moduleHomo (equivFun (invEquiv (CatIso→EquivModules z)))
+--       (isHom+Flip {M = x} {N = y}
+--        (moduleIso (CatIso→EquivModules z)
+--         (ModuleHomomorphism.linear (CatIso.h z))
+--         (ModuleHomomorphism.scalar (CatIso.h z))))
+--       (comm⋆Flip {M = x} {N = y}
+--        (moduleIso (CatIso→EquivModules z)
+--         (ModuleHomomorphism.linear (CatIso.h z))
+--         (ModuleHomomorphism.scalar (CatIso.h z))))
+--       ≡ CatIso.h⁻¹ z
+-- Equiv→CatIsoIso z = ModuleHomo≡ refl
+
+
+
+-- IsoCatIsoModuleEquiv : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                        {x y : ob (RModPreCat R)} →
+--                        Iso (CatIso {𝒞 = (RModPreCat R)} x y) (ModuleEquiv x y)
+-- IsoCatIsoModuleEquiv {R = R}  = record {fun = CatIso→ModuleEquiv ;
+--                                         inv = ModuleEquiv→CatIso ;
+--                                         rightInv = λ z → ModuleEquiv≡ (CatIso→EquivIso z) ;
+--                                         leftInv = λ z → CatIsoCat≡ (RModIsCategory R) refl (Equiv→CatIsoIso z)}
+
+-- CatIso≃ModuleEquiv : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      {x y : ob (RModPreCat R)} →
+--                      CatIso {𝒞 = (RModPreCat R)} x y ≃ ModuleEquiv x y
+-- CatIso≃ModuleEquiv = isoToEquiv IsoCatIsoModuleEquiv
+
+-- RModIsUnivalentHelp : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+--                      (x y : ob (RModPreCat R)) →
+--                      CatIso {𝒞 = (RModPreCat R)} x y ≃ (x ≡ y)
+-- RModIsUnivalentHelp {R = R} x y =
+--   CatIso {𝒞 = (RModPreCat R)} x y                    ≃⟨ CatIso≃ModuleEquiv ⟩
+--   ModuleEquiv x y                                      ≃⟨ ModulePath ⟩
+--   (x ≡ y) ■
+
+-- -- RModIsUnivalent2 : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (x y : RModPreCat R .ob) → isEquiv (pathToIso {𝒞 = RModPreCat R} x y)
+-- -- RModIsUnivalent2 {R = R} x y = equivIsEquiv (isoToEquiv (
+-- --   record {
+-- --   fun = pathToIso {𝒞 = RModPreCat R} x y ;
+-- --   inv = equivFun (RModIsUnivalentHelp x y) ;
+-- --   rightInv = λ z → {!!} ;
+-- --   leftInv = λ z → {!!}
+-- --   }))
+
+-- -- RModIsUnivalent : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalent (RModPreCat R)
+-- -- RModIsUnivalent = record {univ = λ x y → RModIsUnivalent2 x y}

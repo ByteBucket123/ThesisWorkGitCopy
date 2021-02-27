@@ -66,6 +66,54 @@ record ModuleEquiv {ℓ : Level} {R : CommutativeRing {ℓ}} (M N : Module R) : 
     isHom+ : (x y : ⟨ M ⟩M) → (equivFun e) ((M Module.+ x) y) ≡ (N Module.+ (equivFun e x)) (equivFun e y)
     comm⋆ : (r : ⟨ R ⟩) (x : ⟨ M ⟩M) → (equivFun e ((M Module.⋆ r) x)) ≡ ((N Module.⋆ r) (equivFun e x))
 
+--******************************************* Help Funcs ******************************************************
+
+HelpIsHom : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M N : Module R} → (e : ⟨ M ⟩M ≃ ⟨ N ⟩M) → Type ℓ
+HelpIsHom {M = M} {N = N} e = (x y : ⟨ M ⟩M) → (equivFun e) ((M Module.+ x) y) ≡ (N Module.+ (equivFun e x)) (equivFun e y)
+
+HelpComm : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M N : Module R} → (e : ⟨ M ⟩M ≃ ⟨ N ⟩M) → Type ℓ
+HelpComm {R = R} {M = M} {N = N} e = (r : ⟨ R ⟩) (x : ⟨ M ⟩M) → (equivFun e ((M Module.⋆ r) x)) ≡ ((N Module.⋆ r) (equivFun e x))
+
+HelpModuleEquiv≡ : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M N : Module R} → {x y : ModuleEquiv M N}
+               → (p : ModuleEquiv.e x ≡ ModuleEquiv.e y)
+               → (λ i → HelpIsHom {M = M} {N = N} (p i)) [ ModuleEquiv.isHom+ x ≡ ModuleEquiv.isHom+ y ]
+               → (λ i → HelpComm {M = M} {N = N} (p i)) [ ModuleEquiv.comm⋆ x ≡ ModuleEquiv.comm⋆ y ]
+               → (x ≡ y)
+HelpModuleEquiv≡ p q r = cong moduleIso p <*> q <*> r
+
+ModuleEquivHom+IsProp : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M N : Module R} → {x y : ModuleEquiv M N}
+                        → (p : ModuleEquiv.e x ≡ ModuleEquiv.e y)
+                        → (λ i → HelpIsHom {M = M} {N = N} (p i)) [ ModuleEquiv.isHom+ x ≡ ModuleEquiv.isHom+ y ]
+ModuleEquivHom+IsProp {M = M} {N = N} {x = homoH} {y = homoK} p = isProp→PathP (λ i → λ t s → funExt (λ x → funExt (λ y →
+  isSetModule N
+  ((equivFun (p i)) ((M Module.+ x) y))
+  ((N Module.+ (equivFun (p i) x)) (equivFun (p i) y))
+  (t x y)
+  (s x y)
+  )))
+  (ModuleEquiv.isHom+ homoH) (ModuleEquiv.isHom+ homoK)
+
+ModuleEquivCommIsProp : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M N : Module R} → {x y : ModuleEquiv M N}
+                        → (p : ModuleEquiv.e x ≡ ModuleEquiv.e y)
+                        → (λ i → HelpComm {M = M} {N = N} (p i)) [ ModuleEquiv.comm⋆ x ≡ ModuleEquiv.comm⋆ y ]
+ModuleEquivCommIsProp {M = M} {N = N} {x = homoH} {y = homoK} p = isProp→PathP (λ i → λ t s → funExt (λ r → funExt (λ x →
+  isSetModule N
+  (equivFun (p i) ((M Module.⋆ r) x))
+  (((N Module.⋆ r) (equivFun (p i) x)))
+  (t r x)
+  (s r x)
+  )))
+  (ModuleEquiv.comm⋆ homoH) (ModuleEquiv.comm⋆ homoK)
+
+ModuleEquiv≡ : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M N : Module R} → {x y : ModuleEquiv M N}
+               → (p : ModuleEquiv.e x ≡ ModuleEquiv.e y)
+               → (x ≡ y)
+ModuleEquiv≡ {x = x} {y = y} p =
+  HelpModuleEquiv≡ p (ModuleEquivHom+IsProp {x = x} {y = y} p) (ModuleEquivCommIsProp {x = x} {y = y} p)
+
+
+--******************************************* Univalence ******************************************************
+
 ModuleEquiv→LeftModuleEquiv : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M N : Module R}
                               → (ModuleEquiv M N) → (LeftModuleEquiv (Module→LeftModule M) (Module→LeftModule N))
 ModuleEquiv→LeftModuleEquiv (moduleIso e isHom+ comm⋆) = moduleiso e isHom+ comm⋆

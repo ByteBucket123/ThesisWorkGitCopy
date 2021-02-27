@@ -53,6 +53,30 @@ CatIso≡ : {ℓ ℓ' : Level} → {C : UnivalentCategory ℓ ℓ'} → {A B : P
            → x ≡ y
 CatIso≡ p q r s = cong catiso p <*> q <*> r <*> s
 
+HelpSecEq2 : {ℓ ℓ' : Level} → (C : Precategory ℓ ℓ') → {A B : ob C} → (h : hom C A B) → (hinv : hom C B A) → Type ℓ'
+HelpSecEq2 C {B = B} h hinv = C .seq hinv h ≡ C .idn B
+
+HelpRetEq2 : {ℓ ℓ' : Level} → (C : Precategory ℓ ℓ') → {A B : ob C} → (h : hom C A B) → (hinv : hom C B A) → Type ℓ'
+HelpRetEq2 C {A = A} h hinv = C .seq h hinv ≡ C .idn A
+
+
+CatIsoPreCat≡ : {ℓ ℓ' : Level} → {C : Precategory ℓ ℓ'} → {A B : Precategory.ob C} →
+                {x y : CatIso {ℓ} {ℓ'} {C} A B} → (p : CatIso.h x ≡ CatIso.h y)
+                → (q : CatIso.h⁻¹ x ≡ CatIso.h⁻¹ y) → (\ i → HelpSecEq2 C (p i) (q i)) [ CatIso.sec x ≡ CatIso.sec y ]
+                → (\ i → HelpRetEq2 C (p i) (q i)) [ CatIso.ret x ≡ CatIso.ret y ]
+                → x ≡ y
+CatIsoPreCat≡ p q r s = cong catiso p <*> q <*> r <*> s
+
+CatIsoCat≡ : {ℓ ℓ' : Level} → {C : Precategory ℓ ℓ'} → (isCat : isCategory C) → {A B : Precategory.ob C} →
+                {x y : CatIso {ℓ} {ℓ'} {C} A B}
+                → (p : CatIso.h x ≡ CatIso.h y)
+                → (q : CatIso.h⁻¹ x ≡ CatIso.h⁻¹ y)
+                → x ≡ y
+CatIsoCat≡ {C = C} isCat {A = A} {B = B} {x = x} {y = y} p q =
+  CatIsoPreCat≡ p q
+  (isProp→PathP (λ i → λ t s → homIsSet isCat (C .seq (q i) (p i)) (C .idn B) t s) (CatIso.sec x) (CatIso.sec y))
+  (isProp→PathP (λ i → λ t s → homIsSet isCat (C .seq (p i) (q i)) (C .idn A) t s) (CatIso.ret x) (CatIso.ret y))
+
 invCatIso : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B : Precategory.ob (UnivalentCategory.cat C)} →
              (CatIso {ℓ} {ℓ'} {UnivalentCategory.cat C} A B) → (CatIso {ℓ} {ℓ'} {UnivalentCategory.cat C} B A)
 invCatIso C catIso = record {h = CatIso.h⁻¹ catIso ;
@@ -95,4 +119,4 @@ PairEq x y x₁=y₁ x₂=y₂ = cong <_,_> x₁=y₁ <*> x₂=y₂
 
 --There should be a more elegant way to do this
 liftFunExt : {ℓ ℓ' : Level} → {A : Type ℓ} → {B : Type ℓ'} → isSet B → {h k : A → B} → (p q : h ≡ k) → p ≡ q
-liftFunExt setB {h = h} {k = k} p q = λ i → funExt (λ x → setB (h x) (k x) (λ j → (p j) x) (λ j → q j x) i)
+liftFunExt setB {h = h} {k = k} p q = λ i → funExt (λ x → setB (h x) (k x) (λ j → (p j) x) (λ j → (q j) x) i)

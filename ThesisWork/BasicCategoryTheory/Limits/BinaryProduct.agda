@@ -18,7 +18,7 @@ open import ThesisWork.BasicCategoryTheory.UniqueMorphismUpToIsomorphism
 
 
 record BinaryProduct {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') (A B : Precategory.ob (UnivalentCategory.cat C)) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
-  constructor _,BinProd_,_,_
+  constructor BinProd
   field
     A×B : ob (UnivalentCategory.cat C)
     pA : hom (UnivalentCategory.cat C) A×B A
