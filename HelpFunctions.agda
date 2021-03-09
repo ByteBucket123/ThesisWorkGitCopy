@@ -9,6 +9,8 @@ open import ThesisWork.BasicCategoryTheory.ExtendedCategoryDefinitions
 open import Cubical.Foundations.Equiv
 open import ThesisWork.CompatibilityCode
 open import Cubical.Foundations.Equiv.Properties
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Data.Sigma.Properties
 
 --****************************** SIGMA *****************************************
 

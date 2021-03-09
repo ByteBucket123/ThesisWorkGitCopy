@@ -61,9 +61,9 @@ module ModuleΣTheory {ℓ : Level} (R : CommutativeRing {ℓ}) where
   RModuleStructurePathP : {M N : RModuleΣ} → (p : typ M ≡ typ N) → (q : PathP (λ i → RawRModuleStructure (p i)) (fst (snd M)) (fst (snd N))) → PathP (λ i → RModuleAxioms (p i) (q i)) (snd (snd M)) (snd (snd N))
   RModuleStructurePathP {M} {N} p q = isProp→PathP (λ i → isPropRModuleAxioms (p i) (q i)) (snd (snd M)) (snd (snd N))
 
-  isSetRModuleΣLift : isSet RModuleΣ
-  isSetRModuleΣLift M N p q = isSetΣ {!!} (λ K → isSetRModuleStructure {!M!})                              
-                              {!!} {!!} {!!} {!!}
+--isSetRModuleΣLift : isSet RModuleΣ
+--isSetRModuleΣLift M N p q = isSetΣ {!!} (λ K → isSetRModuleStructure {!M!})                              
+--                            {!!} {!!} {!!} {!!}
 
 -- module LeftModuleΣTheory (R : Ring {ℓ}) where
 

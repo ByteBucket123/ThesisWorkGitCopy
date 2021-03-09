@@ -2,7 +2,7 @@
 
 module ThesisWork.CompatibilityCode where
 
---Remake of the old category theory cod for compatibility reasons
+--Remake of the old category theory code for compatibility reasons
 open import Cubical.Core.Glue
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -63,13 +63,6 @@ record isUnivalent (C : Precategory ℓ ℓ') : Type (ℓ-max ℓ ℓ') where
   univEquiv x y = (pathToIso {C = C} x y) , (univ x y)
 
 open isUnivalent public
-
-record isUnivalentAlt (C : Precategory ℓ ℓ') : Type (ℓ-max ℓ ℓ') where
-  field
-    univ : (x : C .ob) → isContr (Σ (C .ob) (λ y → CatIso {C = C} x y))
-
-isoEquivToUnivalent : {ℓ : Level} → {C : Precategory ℓ ℓ} → ((x y : ob C) → (x ≡ y) ≃ CatIso {C = C} x y) → ((x : C .ob) → isContr (Σ (C .ob) (λ y →  x ≡ y))) →  isUnivalentAlt C
-isoEquivToUnivalent {C = C} isocat contrEq = record{ univ = λ x → transport (cong (λ x → isContr (Σ (C .ob) x)) (funExt (λ y → ua (isocat x y)))) (contrEq x) }
 
 -- Opposite Categories
 
