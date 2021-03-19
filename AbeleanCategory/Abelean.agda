@@ -2,7 +2,7 @@
 
 module ThesisWork.AbeleanCategory.Abelean where
 
---open import Cubical.Categories.Category
+open import Cubical.Categories.Category
 open import Cubical.Core.Everything
 open import Cubical.Foundations.Prelude
 open import ThesisWork.BasicCategoryTheory.ElementaryArrowProperties
@@ -17,7 +17,6 @@ open import ThesisWork.BasicCategoryTheory.Limits.BinaryProduct
 open import ThesisWork.BasicCategoryTheory.Limits.BinaryCoProduct
 open import ThesisWork.HelpFunctions
 open import Cubical.HITs.PropositionalTruncation
-open import ThesisWork.CompatibilityCode
 
 record Abelean {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') : Type (ℓ-suc (ℓ-max ℓ  ℓ')) where
   constructor abeleanCat
@@ -27,21 +26,21 @@ record Abelean {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') : Type (ℓ-suc (ℓ-
     AbHasCoProd : hasAllBinaryCoProducts C
     AbHasKernel : hasAllKernels C AbHasZero
     AbHasCoKernel : hasAllCoKernels C AbHasZero
-    AbMonicsAreKernels : {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) S A) → isMonic C k →
-                         ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isKernel C AbHasZero f k) ∥
-    AbEpicsAreCoKernels : {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) B S) → isEpic C k →
-                          ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isCoKernel C AbHasZero f k) ∥
+    AbMonicsAreKernels : {A B S : ob (UnivalentCategory.cat C)} → (k : hom (UnivalentCategory.cat C) S A) → isMonic C k →
+                         ∥ Σ (hom (UnivalentCategory.cat C) A B) (λ f → isKernel C AbHasZero f k) ∥
+    AbEpicsAreCoKernels : {A B S : ob (UnivalentCategory.cat C)} → (k : hom (UnivalentCategory.cat C) B S) → isEpic C k →
+                          ∥ Σ (hom (UnivalentCategory.cat C) A B) (λ f → isCoKernel C AbHasZero f k) ∥
 
 --******************************************* Help Abelean *******************************************
 
 helpAbeleanMonicsAreKernels : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (hasZero : hasZeroObject C) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-helpAbeleanMonicsAreKernels C hasZero = {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) S A) →
-                                        isMonic C k → ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isKernel C hasZero f k) ∥
+helpAbeleanMonicsAreKernels C hasZero = {A B S : ob (UnivalentCategory.cat C)} → (k : hom (UnivalentCategory.cat C) S A) →
+                                        isMonic C k → ∥ Σ (hom (UnivalentCategory.cat C) A B) (λ f → isKernel C hasZero f k) ∥
 
 helpAbeleanEpicsAreCoKernels : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (hasZero : hasZeroObject C) →
                                 Type (ℓ-suc (ℓ-max ℓ ℓ'))
-helpAbeleanEpicsAreCoKernels C hasZero = {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) B S) →
-                                          isEpic C k → ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isCoKernel C hasZero f k) ∥
+helpAbeleanEpicsAreCoKernels C hasZero = {A B S : ob (UnivalentCategory.cat C)} → (k : hom (UnivalentCategory.cat C) B S) →
+                                          isEpic C k → ∥ Σ (hom (UnivalentCategory.cat C) A B) (λ f → isCoKernel C hasZero f k) ∥
 
 Abelean≡ : {ℓ ℓ' : Level} → {C : UnivalentCategory ℓ ℓ'} → {x y : Abelean C}
                → (p : Abelean.AbHasZero x ≡ Abelean.AbHasZero y)

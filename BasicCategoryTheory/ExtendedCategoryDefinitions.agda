@@ -7,6 +7,7 @@ open import Cubical.Core.Everything
 open import Cubical.Foundations.Prelude
 open import Agda.Builtin.Cubical.Glue
 open import ThesisWork.CompatibilityCode
+open import ThesisWork.UnivalentFormulations
 
 record Category (ℓ ℓ' : Level) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   field

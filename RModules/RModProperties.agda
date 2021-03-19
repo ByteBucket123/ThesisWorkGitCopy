@@ -26,6 +26,12 @@ open import Cubical.Foundations.Structure
 open import ThesisWork.CompatibilityCode
 open import ThesisWork.SetSigmaType
 open import Agda.Builtin.Cubical.HCompU
+open import Cubical.Core.Primitives
+open import Cubical.HITs.SetQuotients.Base
+open import Cubical.HITs.SetQuotients.Properties
+open import Cubical.HITs.PropositionalTruncation.Base
+open import ThesisWork.RModules.RModuleProperties
+open import ThesisWork.SetQuotientHelp
 
 --*********************************************** hasZeroObject (RMod R) *******************************************************
 
@@ -351,6 +357,115 @@ makeKernelObjRMod {ℓ = ℓ} R {A = A} {B = B} f =
 --  (λ D g h gker=hker → funExt (λ x → gker=hker x) )) |
 
 --******************************************** hasAllCoKernels (RMod R) ***********************************************
+
+coKernelRel : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+                      (f : Precategory.hom (RModPreCat R) A B) → (b b' : ⟨ B ⟩M) → Type ℓ
+coKernelRel R {A} {B} f b b' = Σ[ a ∈  ⟨ A ⟩M ] b' ≡ b +B f' a
+    where
+      f' = ModuleHomomorphism.h f
+      _+B_ : ⟨ B ⟩M → ⟨ B ⟩M → ⟨ B ⟩M
+      x +B y = (B Module.+ x) y
+
+coKernelPropRel : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+                      (f : Precategory.hom (RModPreCat R) A B) → (b b' : ⟨ B ⟩M) → Type ℓ
+coKernelPropRel R {A} {B} f b b' = ∥ (coKernelRel R f b b') ∥
+
+--elimProp2 : ((x y : A / R ) → isProp (C x y))
+--          → ((a b : A) → C [ a ] [ b ])
+--          → (x y : A / R)
+--          → C x y
+
+--elim : {B : A / R → Type ℓ}
+--     → ((x : A / R) → isSet (B x))
+--     → (f : (a : A) → (B [ a ]))
+--     → ((a b : A) (r : R a b) → PathP (λ i → B (eq/ a b r i)) (f a) (f b))
+--     → (x : A / R)
+--     → B x
+
+makeCoKernelObjRMod : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+                      (f : Precategory.hom (RModPreCat R) A B) → Precategory.ob (RModPreCat R)
+makeCoKernelObjRMod {ℓ} R {A} {B} f =
+  moduleConst coKObj 0coK _+coK_ -coK_ _⋆coK_
+  (isModule
+    (ismodule
+      (isabgroup
+        (isgroup
+          (ismonoid
+            (issemigroup
+              squash/
+              {!!})
+--λ a b c → elim {!!} (λ a →
+--                           elim {!!} (λ b →
+--                             elim {!!} (λ c → [ a ] +coK ([ b ] +coK [ c ]) ≡ ([ a ] +coK [ b ]) +coK [ c ]) {!!} c)
+--                           {!!} b)
+--                         {!!} a
+            {!!})
+          {!!})
+        {!!})
+      {!!}
+      {!!}
+      {!!}
+      {!!}))
+    where
+      f' = ModuleHomomorphism.h f
+      0A = Module.0m A
+      0B = Module.0m B
+      _+B_ : ⟨ B ⟩M → ⟨ B ⟩M → ⟨ B ⟩M
+      x +B y = (B Module.+ x) y
+      -A_ : ⟨ A ⟩M → ⟨ A ⟩M
+      -A x = (Module.- A) x
+      -B_ : ⟨ B ⟩M → ⟨ B ⟩M
+      -B x = (Module.- B) x
+      _⋆B_ : ⟨ R ⟩ → ⟨ B ⟩M → ⟨ B ⟩M
+      r ⋆B a = (B Module.⋆ r) a 
+      _⋆A_ : ⟨ R ⟩ → ⟨ A ⟩M → ⟨ A ⟩M
+      r ⋆A a = (A Module.⋆ r) a 
+      
+      coKObj : Type ℓ
+      coKObj = ⟨ B ⟩M / coKernelRel R f
+      0coK = [ 0B ]
+      _+coK_ : coKObj → coKObj → coKObj
+      _+coK_ = rec2 squash/ (λ a b → [ a +B b ])
+               (λ a b c Rab → eq/ (a +B c) (b +B c)((fst Rab) ,
+                 (b +B c                    ≡⟨ cong (λ x → x +B c) (snd Rab) ⟩
+                 ((a +B f' (fst Rab)) +B c) ≡⟨ sym(Module+Isasso {M = B} a (f' (fst Rab)) c) ⟩
+                 (a +B (f' (fst Rab) +B c)) ≡⟨ cong (λ x → a +B x) (ModuleIsAb {M = B} (f' (fst Rab)) c) ⟩
+                 (a +B (c +B f' (fst Rab))) ≡⟨ Module+Isasso {M = B} a c (f' (fst Rab)) ⟩
+                 ((a +B c) +B f' (fst Rab)) ∎)))
+               λ a b c Rbc → eq/ (a +B b) (a +B c) ((fst Rbc) ,
+                 ((a +B c) ≡⟨ cong (λ x → a +B x) (snd Rbc) ⟩
+                 (a +B (b +B f' (fst Rbc))) ≡⟨ Module+Isasso {M = B} a b (f' (fst Rbc)) ⟩
+                  ((a +B b) +B f' (fst Rbc)) ∎))
+      -coK_ : coKObj → coKObj
+      -coK_ = rec squash/ (λ a → [ -B a ])
+                  λ a b Rab → eq/ (-B a) (-B b) ((-A fst Rab) ,
+                    ((-B b)                       ≡⟨  cong (λ x → -B x) (snd Rab) ⟩
+                    (-B (a +B f' (fst Rab)))      ≡⟨  AbgroupInvDist {G = LeftModule→AbGroup (Module→LeftModule B)}
+                                                        a (f' (fst Rab)) ⟩
+                    ((-B a) +B (-B f' (fst Rab))) ≡⟨  cong (λ x → (-B a) +B x) (sym (ModuleHomomorphismLinSub {M = A} {N = B}
+                                                                                  (fst Rab) f)) ⟩
+                    ((-B a) +B f' (-A fst Rab)) ∎))
+      _⋆coK_ : ⟨ R ⟩ → coKObj → coKObj
+      _⋆coK_ = λ r → rec squash/ (λ a → [ r ⋆B a ]) λ a b Rab → eq/ (r ⋆B a) (r ⋆B b) ((r ⋆A fst Rab) ,
+                 ((r ⋆B b)                         ≡⟨ cong (λ x → r ⋆B x) (snd Rab) ⟩
+                 (r ⋆B (a +B f' (fst Rab)))        ≡⟨ ModuleRDist {M = B} r a (f' (fst Rab)) ⟩
+                 ((r ⋆B a) +B (r ⋆B f' (fst Rab))) ≡⟨ cong (λ x → (r ⋆B a) +B  x) (sym (ModuleHomomorphism.scalar f r (fst Rab))) ⟩
+                 ((r ⋆B a) +B f' (r ⋆A fst Rab)) ∎))
+
+      AssocoK : (x y z : coKObj) → (x +coK (y +coK z)) ≡ ((x +coK y) +coK z)
+      AssocoK = {!!}
+--      AssocoK [ a ] [ b ] [ c ] = eq/ (a +B (b +B c)) ((a +B b) +B c) (0A ,
+--                               (((a +B b) +B c) ≡⟨ sym (Module+Isasso {M = B} a b c) ⟩
+--                                (a +B (b +B c)) ≡⟨ sym(ModuleZeroRight {M = B} (a +B (b +B c))) ⟩
+--                                ((a +B (b +B c)) +B 0B) ≡⟨ cong (λ x → (a +B (b +B c)) +B x) (sym (
+--                                                           ModuleHomomorphismPreserveZero f)) ⟩
+--                               ((a +B (b +B c)) +B f' 0A) ∎))
+--      AssocoK [ a ] [ b ] (eq/ c c' r i) = {!!}
+--      AssocoK [ a ] [ b ] (squash/ c c' p q i j) = {!!}
+--      AssocoK [ a ] (eq/ b b' r i) c = {!!}
+--      AssocoK [ a ] (squash/ b b' p q i j) c = {!!}
+--      AssocoK (eq/ a b₁ r i) b c = {!!}
+--      AssocoK (squash/ a a₁ p q i i₁) b c = {!!}
 
 --Bad attempt, but I don't know how to do excluding subsets without propositional logic...
 --CoKRModTest : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} → (f : Precategory.hom (RModPreCat R) A B) → Type {!!}

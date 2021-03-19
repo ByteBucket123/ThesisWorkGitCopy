@@ -108,8 +108,10 @@ isZeroArrow C {A = A} {B = B} hasZero f = {g : Precategory.hom (UnivalentCategor
                                           {h : Precategory.hom (UnivalentCategory.cat C) (CategoryWithZeroObject.obj hasZero) B} →
                                           Precategory.seq (UnivalentCategory.cat C) g h ≡ f
 
-ZeroArrowIsUnique : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B : Precategory.ob (UnivalentCategory.cat C)} {f g : Precategory.hom (UnivalentCategory.cat C) A B} → (hasZero : hasZeroObject C) →
-                    {h k : Precategory.hom (UnivalentCategory.cat C) A (CategoryWithZeroObject.obj hasZero)} → {j l : Precategory.hom (UnivalentCategory.cat C) (CategoryWithZeroObject.obj hasZero) B} → 
+ZeroArrowIsUnique : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B : Precategory.ob (UnivalentCategory.cat C)} →
+                    {f g : Precategory.hom (UnivalentCategory.cat C) A B} → (hasZero : hasZeroObject C) →
+                    {h k : Precategory.hom (UnivalentCategory.cat C) A (CategoryWithZeroObject.obj hasZero)} →
+                    {j l : Precategory.hom (UnivalentCategory.cat C) (CategoryWithZeroObject.obj hasZero) B} → 
                     isZeroArrow C hasZero f → isZeroArrow C hasZero g →
                     -----------------------------------
                     f ≡ g
@@ -123,3 +125,35 @@ ZeroArrowIsUnique C {A = A} {B = B} hasZero {h = h} {k = k} {j = j} {l = l} fZer
 
 isZeroArrowIsProp : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B : Precategory.ob (UnivalentCategory.cat C)} → (hasZero : hasZeroObject C) → (f : Precategory.hom (UnivalentCategory.cat C) A B) → isProp (isZeroArrow C hasZero f)
 isZeroArrowIsProp C {A = A} {B = B} isZero f p q = implicitFunExt λ {g} → implicitFunExt (λ {h} → homIsSet (UnivalentCategory.isCat C) (Precategory.seq (UnivalentCategory.cat C) g h) f p q)
+
+ZeroArrow→isZeroArrow : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B : Precategory.ob (UnivalentCategory.cat C)} → (hasZero : hasZeroObject C) → (zArrow : ZeroArrow C A B) → isZeroArrow C hasZero (ZeroArrow.f zArrow)
+ZeroArrow→isZeroArrow C {A} {B} hasZero zArrow {g} {h} = (cong₂ (Precategory.seq (UnivalentCategory.cat C))
+                       (isContr→isProp (ZeroObject.isTerm (CategoryWithZeroObject.isZero hasZero) A) g (ZeroArrow.toZero zArrow))
+                       (isContr→isProp (ZeroObject.isInit (CategoryWithZeroObject.isZero hasZero) B) h (ZeroArrow.fromZero zArrow)))
+                       ∙ ZeroArrow.compZero zArrow
+
+ZeroArrowCompLeftWrapper : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B D : Precategory.ob (UnivalentCategory.cat C)} →
+                           (hasZero : hasZeroObject C) → (f : Precategory.hom (UnivalentCategory.cat C) A B) →
+                           ZeroArrow C {Z = CategoryWithZeroObject.obj hasZero} B D → 
+                           ZeroArrow C {Z = CategoryWithZeroObject.obj hasZero} A D
+ZeroArrowCompLeftWrapper C hasZero f (ZeroArrowConst fzero isZero toZero fromZero compZero) =
+  ZeroArrowConst (Precategory.seq (UnivalentCategory.cat C) f fzero)
+                 (CategoryWithZeroObject.isZero hasZero)
+                 (Precategory.seq (UnivalentCategory.cat C) f toZero)
+                 fromZero
+                 ((Precategory.seq-α (UnivalentCategory.cat C) f toZero fromZero) ∙ (cong (λ x →
+                   Precategory.seq (UnivalentCategory.cat C) f x) compZero))
+
+ZeroArrowCompLeft : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B D : Precategory.ob (UnivalentCategory.cat C)} →
+                    (hasZero : hasZeroObject C) → (f : Precategory.hom (UnivalentCategory.cat C) A B) →
+                    Precategory.seq (UnivalentCategory.cat C) {z = D} f (ZeroArrow.f (getZeroArrow C hasZero)) ≡
+                    (ZeroArrow.f (getZeroArrow C hasZero))
+ZeroArrowCompLeft C {D = D} hasZero f = ZeroArrowIsUnique C hasZero {h = ZeroArrow.toZero ZeroArrowComp}
+                                                            {k = ZeroArrow.toZero {B = D} (getZeroArrow C hasZero)}
+                                                            {j = ZeroArrow.fromZero ZeroArrowComp}
+                                                            {l = ZeroArrow.fromZero {A = D} (getZeroArrow C hasZero)}(
+                                  ZeroArrow→isZeroArrow C hasZero (
+                                    ZeroArrowComp))
+                                  (ZeroArrow→isZeroArrow C hasZero (getZeroArrow C hasZero))
+  where
+    ZeroArrowComp = ZeroArrowCompLeftWrapper C hasZero f (getZeroArrow C hasZero)

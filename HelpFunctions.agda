@@ -132,4 +132,3 @@ transportEq {F = F} A≃B FA = equivFun (cong≃ F A≃B) FA
 
 isSetEq : {ℓ : Level} → {A B : Type ℓ} → isSet A → A ≃ B → isSet B
 isSetEq setA A≃B = transportEq A≃B setA
-

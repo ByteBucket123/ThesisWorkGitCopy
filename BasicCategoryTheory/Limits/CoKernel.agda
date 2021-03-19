@@ -27,7 +27,7 @@ coKernelFactors C {B = B} {S = S} hasZero f ker = {D : Precategory.ob (Univalent
                    
 record CoKernel {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') {A B S : Precategory.ob (UnivalentCategory.cat C)}
        (hasZero : CategoryWithZeroObject C) (f : Precategory.hom (UnivalentCategory.cat C) A B) : Type (ℓ-suc (ℓ-max ℓ  ℓ')) where
-  constructor kernelConst
+  constructor coKernelConst
   field
     coKer : Precategory.hom (UnivalentCategory.cat C) B S
     coKerComp : Precategory.seq (UnivalentCategory.cat C) f coKer ≡ (ZeroArrow.f (getZeroArrow C hasZero))
@@ -39,6 +39,12 @@ isCoKernel :  {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B S
               hasZeroObject C → (f : Precategory.hom (UnivalentCategory.cat C) A B) → (k : Precategory.hom (UnivalentCategory.cat C) B S)
               → Type (ℓ-suc (ℓ-max ℓ ℓ'))
 isCoKernel C {S = S} hasZero f k = Σ (CoKernel C {S = S} hasZero f) λ ker → CoKernel.coKer ker ≡ k
+
+isCoKernel→CoKernel : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B S : Precategory.ob (UnivalentCategory.cat C)} →
+                      (hasZero : hasZeroObject C) → (f : Precategory.hom (UnivalentCategory.cat C) A B) →
+                      (k : Precategory.hom (UnivalentCategory.cat C) B S) → isCoKernel C hasZero f k →
+                      CoKernel C hasZero f
+isCoKernel→CoKernel C hasZero f k isCoK = fst isCoK
 
 --************************************************* Help Functions ********************************************
 
@@ -58,7 +64,7 @@ CoKernel≡ : {ℓ ℓ' : Level} → {C : UnivalentCategory ℓ ℓ'} → {A B S
                  → (r : (λ i → coKernelFactors C hasZero f (p i) ) [ CoKernel.coKerFactors x ≡ CoKernel.coKerFactors y ] )
                  → (s : (λ i → HelpCoKerFactorsUnique C (p i)) [ CoKernel.coKerFactorsUnique x ≡ CoKernel.coKerFactorsUnique y ] )
                  → x ≡ y
-CoKernel≡ p q r s = cong kernelConst p <*> q <*> r <*> s
+CoKernel≡ p q r s = cong coKernelConst p <*> q <*> r <*> s
 
 --********************************************************************* Help functions ****************************************************************
 
@@ -99,10 +105,10 @@ CoKerFactorsEq C {A} {B} {S} hasZero f k p q uniFact = isProp→PathP (λ i → 
 
 --******************************************************* is Prop and unique *********************************************
 
-isKerneIsProp : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B S : Precategory.ob (UnivalentCategory.cat C)} →
+isCoKerneIsProp : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B S : Precategory.ob (UnivalentCategory.cat C)} →
                 (hasZero : hasZeroObject C) → (f : Precategory.hom (UnivalentCategory.cat C) A B) → (k : Precategory.hom (UnivalentCategory.cat C) B S)
                  → isProp (isCoKernel C hasZero f k)
-isKerneIsProp C hasZero f k p q = Σ≡
+isCoKerneIsProp C hasZero f k p q = Σ≡
                                   (CoKernel≡
                                   (CoKerEq C hasZero f k p q)
                                   (CoKerCompEq C hasZero f k p q)
