@@ -26,6 +26,11 @@ open import ThesisWork.RModules.RModule
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import ThesisWork.CompatibilityCode
+open import ThesisWork.UnivalentFormulations
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
+open import Cubical.Foundations.Univalence
 
 
 RModPreCat : {ℓ : Level} → (R : CommutativeRing {ℓ}) → Precategory (ℓ-suc ℓ) ℓ
@@ -87,14 +92,6 @@ CatIso→EquivIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
                        {x y : Precategory.ob (RModPreCat R)} → (z : ModuleEquiv x y) → 
                        CatIso→EquivModules (ModuleEquiv→CatIso z) ≡ ModuleEquiv.e z
 CatIso→EquivIso z = equivEq (funExt (λ x → refl))
---  CatIso→EquivModules (ModuleEquiv→CatIso z) .fst x                          ≡⟨ refl ⟩
---  isoToEquiv (CatIso→IsoModules (ModuleEquiv→CatIso z)) .fst x               ≡⟨ refl ⟩
---  Iso.fun (CatIso→IsoModules (ModuleEquiv→CatIso z)) x                       ≡⟨ refl ⟩
---  ModuleHomomorphism.h (CatIso.h (ModuleEquiv→CatIso z)) x                   ≡⟨ refl ⟩
---  (equivFun (ModuleEquiv.e z)) x                                             ≡⟨ refl ⟩
---  (fst (ModuleEquiv.e z)) x ∎)) 
-
--- CatIso→EquivModules (ModuleEquiv→CatIso z) .fst x ≡ ModuleEquiv.e z .fst x
 
 Equiv→CatIsoIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
                        {x y : Precategory.ob (RModPreCat R)} → (z : CatIso x y) → 
@@ -133,22 +130,104 @@ RModIsUnivalentHelp {R = R} x y =
   ModuleEquiv x y                                      ≃⟨ ModulePath ⟩
   (x ≡ y) ■
 
--- RModIsUnivalent2 : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (x y : Precategory.ob RModPreCat R) → isEquiv (pathToIso {C = RModPreCat R} x y)
--- RModIsUnivalent2 {R = R} x y = equivIsEquiv (isoToEquiv (
---   record {
---   fun = pathToIso {C = RModPreCat R} x y ;
---   inv = equivFun (RModIsUnivalentHelp x y) ;
---   rightInv = λ z → {!!} ;
---   leftInv = λ z → {!!}
---   }))
+--RModIsUnivalentAlt : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalentAlt (RModPreCat R)
+--RModIsUnivalentAlt = {!!}
 
--- RModIsUnivalent : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalent (RModPreCat R)
--- RModIsUnivalent = record {univ = λ x y → RModIsUnivalent2 x y}
+--RModIsUnivalent : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalent (RModPreCat R)
+--RModIsUnivalent = {!!}
 
+--******************************************************** Test lift hom ******************************************************
 
---TODO: This proof is almost done. What is left to do is to prove (isSet A → isSet B → isSet (Σ A B)) and use it on module to prove isSet (module R) (first must create Σ type from the record type of module and prove equivalence.)
---RModIsUnivalentAlt : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
---                     ((x y : Precategory.ob (RModPreCat R)) →
---                    CatIso {C = (RModPreCat R)} x y ≃ (x ≡ y)) →
---                     (x : Precategory.ob (RModPreCat R)) → isContr (Σ (Precategory.ob (RModPreCat R)) (λ y →  x ≡ y))
---RModIsUnivalentAlt catIsoEq x = (x , refl) , (λ y → Σ≡ (snd y) (isProp→PathP (λ i → {!!}) refl (snd y)))
+RModPreCatLift : {ℓ : Level} → (R : CommutativeRing {ℓ}) → Precategory (ℓ-suc ℓ) (ℓ-suc ℓ)
+RModPreCatLift R = record {ob = Module R ;
+                           hom = λ M N → Lift (ModuleHomomorphism R M N) ;
+                           idn = λ x → lift ModuleHomoId ;
+                           seq = λ f g → liftFun2 ModuleHomoComp f g ;
+                           seq-λ = λ f → liftExt (ModuleHomoIdLeftComp (lower f)) ;
+                           seq-ρ = λ f → liftExt (ModuleHomoIdRightComp (lower f)) ;
+                           seq-α = λ f g h → liftExt (sym (ModuleHomoCompAsso (lower f) (lower g) (lower h))) }
+
+RModLiftCatIsoIso : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
+                    {x y : Precategory.ob (RModPreCat R)} →
+                    Iso (CatIso {C = (RModPreCat R)} x y) (CatIso {C = (RModPreCatLift R)} x y)
+RModLiftCatIsoIso R =
+  iso (λ x → catiso (lift (CatIso.h x))
+                    (lift (CatIso.h⁻¹ x))
+                    (liftExt (CatIso.sec x))
+                    (liftExt (CatIso.ret x)))
+      (λ x → catiso (lower (CatIso.h x))
+                    (lower (CatIso.h⁻¹ x))
+                    (lowerExt (CatIso.sec x))
+                    (lowerExt (CatIso.ret x)))
+      (λ z → refl)
+       λ z → refl
+
+RModLiftIsUnivalentHelp : {ℓ : Level} → {R : CommutativeRing {ℓ}} →
+                     (x y : Precategory.ob (RModPreCatLift R)) →
+                     CatIso {C = (RModPreCatLift R)} x y ≃ (x ≡ y)
+RModLiftIsUnivalentHelp {R = R} x y = compEquiv (isoToEquiv (invIso (RModLiftCatIsoIso R))) (RModIsUnivalentHelp x y) 
+
+RModLiftIsUnivalentAlt : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalentAlt (RModPreCatLift R)
+RModLiftIsUnivalentAlt = isoEquivToUnivalentAlt λ x y → invEquiv (RModLiftIsUnivalentHelp x y)
+
+RModLiftIsUnivalent : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalent (RModPreCatLift R)
+RModLiftIsUnivalent = univalentAlt→ _ RModLiftIsUnivalentAlt
+
+RModLiftCatIsoIso' : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
+                    {x y : Precategory.ob (RModPreCat R)} →
+                    Iso (Lift {ℓ} {ℓ-suc ℓ} (CatIso {C = (RModPreCat R)} x y)) (CatIso {C = (RModPreCatLift R)} x y)
+RModLiftCatIsoIso' R =
+  iso (λ (lift a) → Iso.fun (RModLiftCatIsoIso R) a)
+      (λ b → lift (Iso.inv (RModLiftCatIsoIso R) b))
+      (λ z → refl)
+       λ z → refl
+
+--isContr (Σ (ob C) (λ y → CatIso {C = C} x y))
+RModIsUnivalentAltHelp : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
+                         {x y : Precategory.ob (RModPreCat R)} →
+                         Iso (Lift {ℓ-suc ℓ} {ℓ-suc (ℓ-suc ℓ)} (Σ (ob (RModPreCat R)) (λ y → CatIso {C = (RModPreCat R)} x y)))
+                             (Σ (ob (RModPreCatLift R)) (λ y → CatIso {C = (RModPreCatLift R)} x y))
+RModIsUnivalentAltHelp R {x} =
+  iso (λ (lift (ob , a)) →      ob , (Iso.fun (RModLiftCatIsoIso R) a))
+      (λ       (ob , b) → lift (ob , Iso.inv (RModLiftCatIsoIso R) b))
+      (λ z → refl)
+       λ z → refl
+
+RModIsUnivalentAltHelp2 : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
+                         {x y : Precategory.ob (RModPreCat R)} →
+                         Iso (Lift {ℓ-suc ℓ} {ℓ} (Σ (ob (RModPreCat R)) (λ y → CatIso {C = (RModPreCat R)} x y)))
+                             (Σ (ob (RModPreCatLift R)) (λ y → CatIso {C = (RModPreCatLift R)} x y))
+RModIsUnivalentAltHelp2 R {x} =
+  iso (λ (lift (ob , a)) →      ob , (Iso.fun (RModLiftCatIsoIso R) a))
+      (λ       (ob , b) → lift (ob , Iso.inv (RModLiftCatIsoIso R) b))
+      (λ z → refl)
+       λ z → refl
+
+RModIsUnivalentAlt : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalentAlt (RModPreCat R)
+RModIsUnivalentAlt {R = R} =
+  record {univ = λ x → (x , (idCatIso x)) , λ z → isProp→PathP (λ i → isPropΣCatIso {y = fst z}) (x , (idCatIso x)) z}
+--  Σ≡ (equivFun (RModIsUnivalentHelp x (fst z)) (snd z))
+--     (isProp→PathP (λ i → isPropCatIso) (idCatIso x) (snd z))}
+  where
+    liftIsUni = RModLiftIsUnivalent
+--    liftCatIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {x y : Precategory.ob (RModPreCat R)} →
+--                 CatIso {C = (RModPreCat R)} x y → CatIso {C = (RModPreCatLift R)} x y
+--    liftCatIso {R = R} a = Iso.fun (RModLiftCatIsoIso R) a
+    isPropΣCatIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {x y : Precategory.ob (RModPreCat R)} →
+                    isProp (Σ (ob (RModPreCat R)) (λ y → CatIso {C = (RModPreCat R)} x y))
+    isPropΣCatIso {R = R} {x} {y} a b =
+      lowerExt (isContr→isProp (
+        transport (cong isContr (sym (ua (isoToEquiv (RModIsUnivalentAltHelp2 R {y = y})))))
+        (isUnivalentAlt.univ RModLiftIsUnivalentAlt x)) (lift a) (lift b))
+    
+--  isPropCatIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {x y : Precategory.ob (RModPreCat R)} →
+--                   isProp (CatIso {C = (RModPreCat R)} x y)
+--  isPropCatIso a b = lowerExt (isContr→isProp {!!} (lift a) (lift b))
+
+RModIsUnivalent : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalent (RModPreCat R)
+RModIsUnivalent {R = R} = univalentAlt→ (RModPreCat R) RModIsUnivalentAlt
+
+RMod : {ℓ ℓ' : Level} → {R : CommutativeRing {ℓ}} → UnivalentCategory (ℓ-suc ℓ) ℓ
+RMod {R = R} = record {cat   = RModPreCat R ;
+                       isCat = RModIsCategory R ;
+                       isUni = RModIsUnivalent}

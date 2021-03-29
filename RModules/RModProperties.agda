@@ -453,7 +453,31 @@ makeCoKernelObjRMod {ℓ} R {A} {B} f =
                  ((r ⋆B a) +B f' (r ⋆A fst Rab)) ∎))
 
       AssocoK : (x y z : coKObj) → (x +coK (y +coK z)) ≡ ((x +coK y) +coK z)
-      AssocoK = {!!}
+      AssocoK = elim3 (λ x y z p q → isProp→isSet (squash/ _ _) p q)
+                      (λ x y z → eq/ (x +B (y +B z)) ((x +B y) +B z) (0A ,
+                        (((x +B y) +B z)        ≡⟨ sym (Module+Isasso {M = B} x y z) ⟩
+                        (x +B (y +B z))         ≡⟨ sym (ModuleZeroRight {M = B} (x +B (y +B z))) ⟩
+                        ((x +B (y +B z)) +B 0B) ≡⟨ cong (λ t → (x +B (y +B z)) +B t) (sym (ModuleHomomorphismPreserveZero f)) ⟩
+                        ((x +B (y +B z)) +B (f' 0A)) ∎)))
+                      (λ a b c d r → {!!})
+--                        PathPSetl {B = λ _ _ _ → A / R}
+--                          {B1 = λ a b c → a +coK (b +coK c)} {B2 = λ a b c → (a +coK b) +coK c}
+--                          (λ x y z → squash/) (eq/ a b r) [ c ] [ d ]
+--                            (eq/ (a +B (c +B d)) ((a +B c) +B d)
+--                            (0A ,
+--                              (((a +B c) +B d) ≡⟨ (λ i → Module+Isasso a c d (~ i)) ⟩
+--                              (a +B (c +B d)) ≡⟨ (λ i → ModuleZeroRight (a +B (c +B d)) (~ i)) ⟩
+--                              ((a +B (c +B d)) +B 0B) ≡⟨
+--                              (λ i → (a +B (c +B d)) +B ModuleHomomorphismPreserveZero f (~ i)) ⟩
+--                              ((a +B (c +B d)) +B f' 0A) ∎)))
+--                            (eq/ (b +B (c +B d)) ((b +B c) +B d)
+--                              (0A ,
+--                              (((b +B c) +B d) ≡⟨ (λ i → Module+Isasso b c d (~ i)) ⟩
+--                              (b +B (c +B d)) ≡⟨ (λ i → ModuleZeroRight (b +B (c +B d)) (~ i)) ⟩
+--                              ((b +B (c +B d)) +B 0B) ≡⟨
+--                              (λ i → (b +B (c +B d)) +B ModuleHomomorphismPreserveZero f (~ i)) ⟩
+--                              ((b +B (c +B d)) +B f' 0A) ∎))))
+                      {!!} {!!}
 --      AssocoK [ a ] [ b ] [ c ] = eq/ (a +B (b +B c)) ((a +B b) +B c) (0A ,
 --                               (((a +B b) +B c) ≡⟨ sym (Module+Isasso {M = B} a b c) ⟩
 --                                (a +B (b +B c)) ≡⟨ sym(ModuleZeroRight {M = B} (a +B (b +B c))) ⟩

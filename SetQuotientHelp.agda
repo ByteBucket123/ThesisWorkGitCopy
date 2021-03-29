@@ -66,8 +66,18 @@ funDepTr3l : {ℓ ℓ' ℓ'' ℓ''' : Level} → {A : Type ℓ} → {C : Type �
              PathP (λ i → B (p i) z w) u0 u1 ≡ Path (B a1 z w) (transport (λ i → B (p i) z w) u0) u1
 funDepTr3l {B = B} p z w u0 u1 j = PathP (λ i → B (p (j ∨ i)) z w) (transport-filler (λ i → B (p i) z w) u0 j) u1
 
---liftFunExt : {ℓ ℓ' : Level} → {A : Type ℓ} → {B : Type ℓ'} → isSet B → {h k : A → B} → (p q : h ≡ k) → p ≡ q
---liftFunExt setB {h = h} {k = k} p q = λ i → funExt (λ x → setB (h x) (k x) (λ j → (p j) x) (λ j → (q j) x) i)
+funDepTr3m : {ℓ ℓ' ℓ'' ℓ''' : Level} → {A : Type ℓ} → {C : Type ℓ'} {D : Type ℓ''} → {B : A → C → D →  Type ℓ'''} →
+             {c0 c1 : C} → (p : c0 ≡ c1) →
+             (z : A) → (w : D) → (u0 : B z c0 w) → (u1 : B z c1 w) →
+             PathP (λ i → B z (p i) w) u0 u1 ≡ Path (B z c1 w) (transport (λ i → B z (p i) w) u0) u1
+funDepTr3m {B = B} p z w u0 u1 j = PathP (λ i → B z (p (j ∨ i)) w) (transport-filler (λ i → B z (p i) w) u0 j) u1
+
+funDepTr3r : {ℓ ℓ' ℓ'' ℓ''' : Level} → {A : Type ℓ} → {C : Type ℓ'} {D : Type ℓ''} → {B : A → C → D →  Type ℓ'''} →
+             {d0 d1 : D} → (p : d0 ≡ d1) →
+             (z : A) → (w : C) → (u0 : B z w d0) → (u1 : B z w d1) →
+             PathP (λ i → B z w (p i)) u0 u1 ≡ Path (B z w d1) (transport (λ i → B z w (p i)) u0) u1
+funDepTr3r {B = B} p z w u0 u1 j = PathP (λ i → B z w (p (j ∨ i))) (transport-filler (λ i → B z w (p i)) u0 j) u1
+
 
 liftFunExtDepRight : {ℓ ℓ' : Level} → {A : Type ℓ} → {B : A → A → A → Type ℓ'} →
                      ((x y z : A) → isSet (B x y z)) → (x y : A) → 
@@ -195,3 +205,41 @@ elim3 {A = A} {R = R} {B = B} Bset f feqf feqm feql =
 --                              λ x y r → funExt (λ z → isProp→PathP (λ i → {!!} )
 --                                (elim (λ y₁ → Bset [ x ] y₁) (λ y₁ → f x y₁) (λ y₁ z₁ r₁ → feqr x y₁ z₁ r₁) z)
 --                                (elim (λ y₁ → Bset [ y ] y₁) (λ y₁ → f y y₁) (λ y₁ z₁ r₁ → feqr y y₁ z₁ r₁) z))
+
+SetPathPl : {ℓ ℓ' ℓ'' ℓ''' : Level} → {A : Type ℓ} → {C : Type ℓ'} {D : Type ℓ''} → {B : A → C → D →  Type ℓ'''} →
+            ((x : A) → (y : C) → (z : D) → isSet (B x y z)) → 
+            {a0 a1 : A} → (p : a0 ≡ a1) →
+            (z : C) → (w : D) → (u0 : B a0 z w) → (u1 : B a1 z w) →
+            isSet (PathP (λ i → B (p i) z w) u0 u1)
+SetPathPl {B = B} Bset {a1 = a1} p z w u0 u1 =
+  transport (cong isSet (sym (funDepTr3l {B = B} p z w u0 u1)))
+    (isSet→isGroupoid (Bset a1 z w) (transport (λ i → B (p i) z w) u0) u1)
+
+SetPathPm : {ℓ ℓ' ℓ'' ℓ''' : Level} → {A : Type ℓ} → {C : Type ℓ'} {D : Type ℓ''} → {B : A → C → D →  Type ℓ'''} →
+            ((x : A) → (y : C) → (z : D) → isSet (B x y z)) → 
+            {c0 c1 : C} → (p : c0 ≡ c1) →
+            (z : A) → (w : D) → (u0 : B z c0 w) → (u1 : B z c1 w) →
+            isSet (PathP (λ i → B z (p i) w) u0 u1)
+SetPathPm {B = B} Bset {c1 = c1} p z w u0 u1 =
+  transport (cong isSet (sym (funDepTr3m {B = B} p z w u0 u1)))
+    (isSet→isGroupoid (Bset z c1 w) (transport (λ i → B z (p i) w) u0) u1)
+
+SetPathPr : {ℓ ℓ' ℓ'' ℓ''' : Level} → {A : Type ℓ} → {C : Type ℓ'} {D : Type ℓ''} → {B : A → C → D →  Type ℓ'''} →
+            ((x : A) → (y : C) → (z : D) → isSet (B x y z)) → 
+            {d0 d1 : D} → (p : d0 ≡ d1) →
+            (z : A) → (w : C) → (u0 : B z w d0) → (u1 : B z w d1) →
+            isSet (PathP (λ i → B z w (p i)) u0 u1)
+SetPathPr {B = B} Bset {d1 = d1} p z w u0 u1 =
+  transport (cong isSet (sym (funDepTr3r {B = B} p z w u0 u1)))
+    (isSet→isGroupoid (Bset z w d1) (transport (λ i → B z w (p i)) u0) u1)
+
+PathPSetl : {ℓ1 ℓ2 ℓ3 ℓ4 : Level} → {A : Type ℓ1} → {C : Type ℓ2} → {D : Type ℓ3} → {B : A → C → D → Type ℓ4} → 
+            {B1 B2 : (x : A) → (y : C) → (z : D) → B x y z} →
+            ((x : A) → (y : C) → (z : D) → isSet (B x y z)) →
+            {a0 a1 : A} → (p : a0 ≡ a1) →
+            (z : C) → (w : D) →
+            (q : B1 a0 z w ≡ B2 a0 z w) → (r : B1 a1 z w ≡ B2 a1 z w) →
+            PathP (λ i → (B1 (p i) z w) ≡ (B2 (p i) z w)) q r
+PathPSetl {B1 = B1} {B2 = B2} Bset {a1 = a1} p z w q r =
+  transport (sym (funDepTr3l {B = λ x y z → B1 x y z ≡ B2 x y z} p z w q r))
+    (Bset a1 z w _ _ (transport (λ i → (B1 (p i) z w) ≡ (B2 (p i) z w)) q) r)
