@@ -205,7 +205,7 @@ RModIsUnivalentAltHelp2 R {x} =
 
 RModIsUnivalentAlt : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalentAlt (RModPreCat R)
 RModIsUnivalentAlt {R = R} =
-  record {univ = λ x → (x , (idCatIso x)) , λ z → isProp→PathP (λ i → isPropΣCatIso {y = fst z}) (x , (idCatIso x)) z}
+  record {univ = λ x → (x , (idCatIso x)) , λ z → isProp→PathP (λ i → isPropΣCatIso' {y = fst z}) (x , (idCatIso x)) z}
 --  Σ≡ (equivFun (RModIsUnivalentHelp x (fst z)) (snd z))
 --     (isProp→PathP (λ i → isPropCatIso) (idCatIso x) (snd z))}
   where
@@ -213,9 +213,9 @@ RModIsUnivalentAlt {R = R} =
 --    liftCatIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {x y : Precategory.ob (RModPreCat R)} →
 --                 CatIso {C = (RModPreCat R)} x y → CatIso {C = (RModPreCatLift R)} x y
 --    liftCatIso {R = R} a = Iso.fun (RModLiftCatIsoIso R) a
-    isPropΣCatIso : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {x y : Precategory.ob (RModPreCat R)} →
+    isPropΣCatIso' : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {x y : Precategory.ob (RModPreCat R)} →
                     isProp (Σ (ob (RModPreCat R)) (λ y → CatIso {C = (RModPreCat R)} x y))
-    isPropΣCatIso {R = R} {x} {y} a b =
+    isPropΣCatIso' {R = R} {x} {y} a b =
       lowerExt (isContr→isProp (
         transport (cong isContr (sym (ua (isoToEquiv (RModIsUnivalentAltHelp2 R {y = y})))))
         (isUnivalentAlt.univ RModLiftIsUnivalentAlt x)) (lift a) (lift b))
@@ -227,7 +227,7 @@ RModIsUnivalentAlt {R = R} =
 RModIsUnivalent : {ℓ : Level} → {R : CommutativeRing {ℓ}} → isUnivalent (RModPreCat R)
 RModIsUnivalent {R = R} = univalentAlt→ (RModPreCat R) RModIsUnivalentAlt
 
-RMod : {ℓ ℓ' : Level} → {R : CommutativeRing {ℓ}} → UnivalentCategory (ℓ-suc ℓ) ℓ
+RMod : {ℓ : Level} → {R : CommutativeRing {ℓ}} → UnivalentCategory (ℓ-suc ℓ) ℓ
 RMod {R = R} = record {cat   = RModPreCat R ;
                        isCat = RModIsCategory R ;
                        isUni = RModIsUnivalent}

@@ -128,7 +128,7 @@ isCoKerneIsProp C hasZero f k p q = Σ≡
 
 hasCoKernel : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B : Precategory.ob (UnivalentCategory.cat C)} →
             hasZeroObject C → (f : Precategory.hom (UnivalentCategory.cat C) A B) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-hasCoKernel C hasZero f = ∥ ({S : Precategory.ob (UnivalentCategory.cat C)} → CoKernel C {S = S} hasZero f) ∥
+hasCoKernel C hasZero f = ∥ Σ (Precategory.ob (UnivalentCategory.cat C)) (λ S → CoKernel C {S = S} hasZero f) ∥
 --{S : Precategory.ob (UnivalentCategory.cat C)} → Kernel C {S = S} hasZero f
 
 hasCoKernelIsProp : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B : Precategory.ob (UnivalentCategory.cat C)} →

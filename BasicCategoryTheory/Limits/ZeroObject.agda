@@ -157,3 +157,30 @@ ZeroArrowCompLeft C {D = D} hasZero f = ZeroArrowIsUnique C hasZero {h = ZeroArr
                                   (ZeroArrow→isZeroArrow C hasZero (getZeroArrow C hasZero))
   where
     ZeroArrowComp = ZeroArrowCompLeftWrapper C hasZero f (getZeroArrow C hasZero)
+
+ZeroArrowCompRightWrapper : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B D : Precategory.ob (UnivalentCategory.cat C)} →
+                           (hasZero : hasZeroObject C) → (f : Precategory.hom (UnivalentCategory.cat C) B D) →
+                           ZeroArrow C {Z = CategoryWithZeroObject.obj hasZero} A B → 
+                           ZeroArrow C {Z = CategoryWithZeroObject.obj hasZero} A D
+ZeroArrowCompRightWrapper C hasZero f (ZeroArrowConst fzero isZero toZero fromZero compZero) =
+  ZeroArrowConst (Precategory.seq (UnivalentCategory.cat C) fzero f)
+                 (CategoryWithZeroObject.isZero hasZero)
+                 toZero
+                 (Precategory.seq (UnivalentCategory.cat C) fromZero f)
+                 (sym (Precategory.seq-α (UnivalentCategory.cat C) toZero fromZero f) ∙
+                   cong (λ x → Precategory.seq (UnivalentCategory.cat C) x f) compZero)
+
+ZeroArrowCompRight : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B D : Precategory.ob (UnivalentCategory.cat C)} →
+                    (hasZero : hasZeroObject C) → (f : Precategory.hom (UnivalentCategory.cat C) B D) →
+                    Precategory.seq (UnivalentCategory.cat C) {x = A} (ZeroArrow.f (getZeroArrow C hasZero)) f ≡
+                    (ZeroArrow.f (getZeroArrow C hasZero))
+ZeroArrowCompRight C {D = D} hasZero f =
+  ZeroArrowIsUnique C hasZero
+    {h = ZeroArrow.toZero ZeroArrowComp}
+    {k = ZeroArrow.toZero {B = CategoryWithZeroObject.obj hasZero} (getZeroArrow C hasZero)}
+    {j = ZeroArrow.fromZero ZeroArrowComp}
+    {l = ZeroArrow.fromZero {A = CategoryWithZeroObject.obj hasZero} (getZeroArrow C hasZero)}
+    (ZeroArrow→isZeroArrow C hasZero ZeroArrowComp)
+    (ZeroArrow→isZeroArrow C hasZero (getZeroArrow C hasZero))
+    where
+      ZeroArrowComp = ZeroArrowCompRightWrapper C hasZero f (getZeroArrow C hasZero)
