@@ -28,7 +28,9 @@ open import Cubical.Foundations.Structure
 open import ThesisWork.CompatibilityCode
 open import ThesisWork.SetSigmaType
 open import Agda.Builtin.Cubical.HCompU
-open import Cubical.Core.Primitives
+open import Cubical.Core.Primitives renaming
+  (_[_≡_] to _[_≡_]P)
+
 open import Cubical.HITs.SetQuotients.Base
 open import Cubical.HITs.SetQuotients.Properties
 open import Cubical.HITs.PropositionalTruncation.Base
@@ -42,6 +44,10 @@ open import Cubical.HITs.PropositionalTruncation.Properties renaming
    elim3 to elim3Hprop ;
    rec to recHprop ;
    rec2 to rec2Hprop )
+
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Univalence
+open import Cubical.Relation.Binary.Base
 
 --*********************************************** hasZeroObject (RMod R) *******************************************************
 
@@ -424,7 +430,7 @@ hasAllKernelsRMod R {A} {B} f =
 --******************************************** hasAllCoKernels (RMod R) ***********************************************
 
 coKernelRel : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
-                      (f : Precategory.hom (RModPreCat R) A B) → (b b' : ⟨ B ⟩M) → Type ℓ
+              (f : Precategory.hom (RModPreCat R) A B) → (b b' : ⟨ B ⟩M) → Type ℓ
 coKernelRel R {A} {B} f b b' = Σ[ a ∈  ⟨ A ⟩M ] b' ≡ b +B f' a
     where
       f' = ModuleHomomorphism.h f
@@ -435,17 +441,64 @@ coKernelPropRel : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Preca
                       (f : Precategory.hom (RModPreCat R) A B) → (b b' : ⟨ B ⟩M) → Type ℓ
 coKernelPropRel R {A} {B} f b b' = ∥ (coKernelRel R f b b') ∥
 
---elimProp2 : ((x y : A / R ) → isProp (C x y))
---          → ((a b : A) → C [ a ] [ b ])
---          → (x y : A / R)
---          → C x y
+--MonicToInj : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+--             (f : Precategory.hom (RModPreCat R) A B) → (isMonic (RMod {R = R}) f) → (a a' : ⟨ A ⟩M) →
+--             ModuleHomomorphism.h f a ≡ ModuleHomomorphism.h f a' → a ≡ a'
+--MonicToInj R {A} {B} f monf a a' fa=fa' =
+--  a ≡⟨ idaa' ⟩
+--  a' ∎
+--  where
+--    f' = ModuleHomomorphism.h f
+--    id = Precategory.idn (RModPreCat R)
+--    idaa' : ModuleHomomorphism.h (id A) a ≡ ModuleHomomorphism.h (id A) a'
+--    idaa' =
+--      ModuleHomomorphism.h (id A) a ≡⟨ {!!} ⟩
+--      ModuleHomomorphism.h (id A) a' ∎
 
---elim : {B : A / R → Type ℓ}
---     → ((x : A / R) → isSet (B x))
---     → (f : (a : A) → (B [ a ]))
---     → ((a b : A) (r : R a b) → PathP (λ i → B (eq/ a b r i)) (f a) (f b))
---     → (x : A / R)
---     → B x
+--coKernelRelMonicProp : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+--                      (f : Precategory.hom (RModPreCat R) A B) → (isMonic (RMod {R = R}) f) → (b b' : ⟨ B ⟩M) →
+--                      isProp (coKernelRel R f b b')
+--coKernelRelMonicProp = {!!}
+
+coKernelRelisEquiv : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+                     (f : Precategory.hom (RModPreCat R) A B) → BinaryRelation.isEquivRel (coKernelRel R f)
+coKernelRelisEquiv R {A} {B} f =
+  BinaryRelation.equivRel (λ b →
+                             0A , (b        ≡⟨ sym (ModuleZeroRight {M = B} b) ⟩
+                                  (b +B 0B) ≡⟨ cong (λ x → b +B x) (sym (ModuleHomomorphismPreserveZero f)) ⟩
+                                  (b +B f' 0A) ∎))
+                          (λ b b' (a , b'=b+fa) →
+                            (-A a) , (b                         ≡⟨ sym (ModuleZeroRight {M = B} b) ⟩
+                                     (b +B 0B)                  ≡⟨ cong (λ x → b +B x) (sym (ModuleInvRight {M = B} (f' a))) ⟩
+                                     (b +B (f' a +B (-B f' a))) ≡⟨ Module+Isasso {M = B} b (f' a) (-B (f' a)) ⟩
+                                     ((b +B f' a) +B (-B f' a)) ≡⟨ cong₂ (λ x y → x +B y) (sym b'=b+fa) (sym (ModuleHomomorphismLinSub a f)) ⟩
+                                     (b' +B f' (-A a)) ∎))
+                          λ b b' b'' (a , b'=b+fa) (a' , b''=b'+fa') →
+                            (a +A a') , (b''                   ≡⟨ b''=b'+fa' ⟩
+                                        (b' +B f' a')          ≡⟨ cong (λ x → x +B f' a') b'=b+fa ⟩
+                                        ((b +B f' a) +B f' a') ≡⟨ sym (Module+Isasso {M = B} b (f' a) (f' a')) ⟩
+                                        (b +B (f' a +B f' a')) ≡⟨ cong (λ x → b +B x) (sym (ModuleHomomorphism.linear f a a')) ⟩
+                                        (b +B f' (a +A a')) ∎)
+  where
+    f' = ModuleHomomorphism.h f
+    0A = Module.0m A
+    0B = Module.0m B
+    _+A_ : ⟨ A ⟩M → ⟨ A ⟩M → ⟨ A ⟩M
+    x +A y = (A Module.+ x) y
+    _+B_ : ⟨ B ⟩M → ⟨ B ⟩M → ⟨ B ⟩M
+    x +B y = (B Module.+ x) y
+    -A_ : ⟨ A ⟩M → ⟨ A ⟩M
+    -A x = (Module.- A) x
+    -B_ : ⟨ B ⟩M → ⟨ B ⟩M
+    -B x = (Module.- B) x
+
+
+coKernelPropRelisEquiv : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+                     (f : Precategory.hom (RModPreCat R) A B) → BinaryRelation.isEquivRel (coKernelPropRel R f)
+coKernelPropRelisEquiv R {A} {B} f =
+  BinaryRelation.equivRel (λ x → ∣ (BinaryRelation.isEquivRel.reflexive (coKernelRelisEquiv R f) x) ∣)
+                          (λ x y → map (BinaryRelation.isEquivRel.symmetric (coKernelRelisEquiv R f) x y) )
+                          λ x y z → map2 (BinaryRelation.isEquivRel.transitive (coKernelRelisEquiv R f) x y z)
 
 makeCoKernelObjRMod : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
                       (f : Precategory.hom (RModPreCat R) A B) → Precategory.ob (RModPreCat R)
@@ -681,6 +734,76 @@ hasAllCoKernelsRMod R {A} {B} f =
                     ((r ⋆B x) +B 0B) ≡⟨ cong (λ z → (r ⋆B x) +B z) (sym (ModuleHomomorphismPreserveZero f)) ⟩
                     ((r ⋆B x) +B (f' 0A)) ∎))
 
+--TODO : FIX
+hasAllCoKernelsRModNonTrunk  : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
+                               {A B : Precategory.ob (RModPreCat R)} → (f : Precategory.hom (RModPreCat R) A B) →
+                               Σ (Precategory.ob (RModPreCat R)) (λ S → CoKernel (RMod {R = R}) {S = S} (hasZeroObjectRMod R) f)
+hasAllCoKernelsRModNonTrunk R {A} {B} f =
+  (makeCoKernelObjRMod R f) ,
+    coKernelConst incHomo
+                  (ModuleHomo≡ (funExt (λ x → eq/ _ _ ((-A x) ,
+                    (0B              ≡⟨ sym (ModuleHomomorphismPreserveZero f) ⟩
+                    f' 0A            ≡⟨ cong f' (sym (ModuleInvRight {M = A} x)) ⟩
+                    f' (x +A (-A x)) ≡⟨ ModuleHomomorphism.linear f x (-A x) ⟩
+                    (f' x +B f' (-A x)) ∎)))))
+                  (λ {D} h fh=0 →
+                    (moduleHomo (rec (isSetModule D) (ModuleHomomorphism.h h)
+                                  (λ a b r →
+                                    ModuleHomomorphism.h h a
+                                      ≡⟨ sym (ModuleZeroRight {M = D} (ModuleHomomorphism.h h a)) ⟩
+                                    (D Module.+ (ModuleHomomorphism.h h a)) (Module.0m D)
+                                      ≡⟨ cong (D Module.+ (ModuleHomomorphism.h h a)) (
+                                        sym (λ i → ModuleHomomorphism.h (fh=0 i) (fst r))) ⟩
+                                    (D Module.+ (ModuleHomomorphism.h h a)) (ModuleHomomorphism.h h (f' (fst r)))
+                                      ≡⟨ sym (ModuleHomomorphism.linear h a (f' (fst r))) ⟩
+                                    ModuleHomomorphism.h h (a +B f' (fst r))
+                                      ≡⟨ cong (ModuleHomomorphism.h h) (sym (snd r)) ⟩
+                                    ModuleHomomorphism.h h b ∎))
+                                (elim2 (λ x y → isProp→isSet (isSetModule D _ _))
+                                       (ModuleHomomorphism.linear h)
+                                       (λ a b c r → toPathP (isSetModule D _ _ _ _))
+                                        λ a b c r → toPathP (isSetModule D _ _ _ _))
+                                λ r → elim (λ x → isProp→isSet (isSetModule D _ _))
+                                           (ModuleHomomorphism.scalar h r)
+                                           λ a b r → toPathP (isSetModule D _ _ _ _)) ,
+                    ModuleHomo≡ (funExt (λ x → refl)))
+                  (λ D h g inch=incg → ModuleHomo≡ (funExt (elim (λ x → isProp→isSet (isSetModule D _ _))
+                                                            (λ a → λ i → ModuleHomomorphism.h (inch=incg i) a)
+                                                            λ a b r → toPathP (isSetModule D _ _ _ _))))
+  where
+    f' = ModuleHomomorphism.h f
+    0A = Module.0m A
+    0B = Module.0m B
+    _+B_ : ⟨ B ⟩M → ⟨ B ⟩M → ⟨ B ⟩M
+    x +B y = (B Module.+ x) y
+    _+A_ : ⟨ A ⟩M → ⟨ A ⟩M → ⟨ A ⟩M
+    x +A y = (A Module.+ x) y
+    -A_ : ⟨ A ⟩M → ⟨ A ⟩M
+    -A x = (Module.- A) x
+    -B_ : ⟨ B ⟩M → ⟨ B ⟩M
+    -B x = (Module.- B) x
+    _⋆B_ : ⟨ R ⟩ → ⟨ B ⟩M → ⟨ B ⟩M
+    r ⋆B a = (B Module.⋆ r) a 
+    _⋆A_ : ⟨ R ⟩ → ⟨ A ⟩M → ⟨ A ⟩M
+    r ⋆A a = (A Module.⋆ r) a
+    _+R_ : ⟨ CommutativeRing→Ring R ⟩ → ⟨ CommutativeRing→Ring R ⟩ → ⟨ CommutativeRing→Ring R ⟩
+    r +R s = (snd (CommutativeRing→Ring R) RingStr.+ r) s
+    _·R_ : ⟨ CommutativeRing→Ring R ⟩ → ⟨ CommutativeRing→Ring R ⟩ → ⟨ CommutativeRing→Ring R ⟩
+    r ·R s = (snd (CommutativeRing→Ring R) RingStr.· r) s
+    1R = RingStr.1r (snd (CommutativeRing→Ring R))
+
+    incHomo : ModuleHomomorphism R B (makeCoKernelObjRMod R f)
+    incHomo =
+      moduleHomo [_]
+                 (λ x y → eq/ _ _ (0A ,
+                   ((x +B y)        ≡⟨ sym (ModuleZeroRight {M = B} (x +B y)) ⟩
+                   ((x +B y) +B 0B) ≡⟨ cong (λ z → (x +B y) +B z) (sym (ModuleHomomorphismPreserveZero f)) ⟩
+                   ((x +B y) +B (f' 0A)) ∎)))
+                  λ r x → eq/ _ _ (0A ,
+                    ((r ⋆B x)        ≡⟨ sym (ModuleZeroRight {M = B} (r ⋆B x)) ⟩
+                    ((r ⋆B x) +B 0B) ≡⟨ cong (λ z → (r ⋆B x) +B z) (sym (ModuleHomomorphismPreserveZero f)) ⟩
+                    ((r ⋆B x) +B (f' 0A)) ∎))
+
 --**************************************************************** Monics are kernels ***********************************************************************
 
 PostCompMonicPreserveKernel : {ℓ ℓ' : Level} → {C : UnivalentCategory ℓ ℓ'} →
@@ -851,7 +974,27 @@ PrecompIsoPreserveKernel {C = C} {A} {B} {S} {S'} k f catIso hasZero fkKer =
             (h ∘ f ≡ 0a E B) → Precategory.hom (UnivalentCategory.cat C) E S'
       h'' {E} h hf=0 = fst (h''Help h hf=0)
 
-ImHom : {ℓ ℓ' : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
+Σ2DepIso : {ℓ ℓ' ℓ'' : Level} → {A : Type ℓ} → {B : Type ℓ'} → {C : A → B → Type ℓ''} →
+           Iso (Σ A (λ a → Σ B (C a))) (Σ (Σ A (λ _ → B)) (λ (a , b) → C a b))
+Σ2DepIso =
+  iso (λ (a , (b , c)) → (a , b) , c)
+      (λ ((a , b) , c) → (a , (b , c)))
+      (λ z → refl)
+      (λ z → refl)
+
+Σ2DepHelp : {ℓ ℓ' ℓ'' : Level} → {A : Type ℓ} → {B : Type ℓ'} → {C : A → B → Type ℓ''} →
+            (Σ A (λ a → Σ B (C a))) ≡ (Σ (Σ A (λ _ → B)) (λ (a , b) → C a b))
+Σ2DepHelp = ua (isoToEquiv Σ2DepIso)         
+
+Σ2Dep : {ℓ ℓ' ℓ'' : Level} → {A : Type ℓ} → {B : Type ℓ'} → {C : A → B → Type ℓ''} →
+        {x y : Σ A (λ a → Σ B (C a))} →
+        (p : fst x ≡ fst y) →
+        (q : fst (snd x) ≡ fst (snd y)) →
+        (λ i → C (p i) (q i)) [ snd (snd x) ≡ snd (snd y) ]P → 
+        x ≡ y
+Σ2Dep {x = x} {y = y} p q r = isoFunInjective Σ2DepIso x y (Σ≡ (Σ≡ p q) r)
+
+ImHom : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
         (f : Precategory.hom (RModPreCat R) A B) → Precategory.ob (RModPreCat R)
 ImHom R {A} {B} f =
   moduleConst (Σ ⟨ B ⟩M λ b → Helpers.fiber f' b) (0B , 0A , ModuleHomomorphismPreserveZero f) _+Im_ -Im_ _⋆Im_
@@ -863,17 +1006,16 @@ ImHom R {A} {B} f =
               (issemigroup
                 (isSetΣ (isSetModule B) (λ b → isSetΣ (isSetModule A) (λ b → isProp→isSet (isSetModule B _ _))))
                 λ (b , a , fa=b) (b' , a' , fa'=b') (b'' , a'' , fa''=b'') →
-                  Σ≡ (Module+Isasso {M = B} b b' b'')
-                     λ i → (Module+Isasso {M = A} a a' a'' i) ,
-                       isSetModule B (f' (Module+Isasso {M = A} a a' a'' i))
-                                     (Module+Isasso {M = B} b b' b'' i) {!!} {!!} i )
-              {!!})
-            {!!})
-          {!!})
-        {!!}
-        {!!}
-        {!!}
-        {!!}))
+                  Σ2Dep (Module+Isasso {M = B} b b' b'') (Module+Isasso {M = A} a a' a'') (toPathP (isSetModule B _ _ _ _)))
+              λ (b , a , fa=b) → (Σ2Dep (ModuleZeroRight {M = B} b) (ModuleZeroRight {M = A} a) (toPathP (isSetModule B _ _ _ _))) ,
+                                  Σ2Dep (ModuleZeroLeft {M = B} b) (ModuleZeroLeft {M = A} a) (toPathP (isSetModule B _ _ _ _)))
+            λ (b , a , fa=b) → (Σ2Dep (ModuleInvRight {M = B} b) (ModuleInvRight {M = A} a) (toPathP (isSetModule B _ _ _ _))) ,
+                               (Σ2Dep (ModuleInvLeft {M = B} b ) (ModuleInvLeft {M = A} a) (toPathP (isSetModule B _ _ _ _))))
+          λ (b , a , fa=b) (b' , a' , fa'=b') → Σ2Dep (ModuleIsAb {M = B} b b') (ModuleIsAb {M = A} a a') (toPathP (isSetModule B _ _ _ _)))
+        (λ r s (b , a , fa=b) → Σ2Dep (Module·Isasso {M = B} r s b) (Module·Isasso {M = A} r s a) (toPathP (isSetModule B _ _ _ _)))
+        (λ r s (b , a , fa=b) → Σ2Dep (ModuleLDist {M = B} r s b) (ModuleLDist {M = A} r s a) (toPathP (isSetModule B _ _ _ _)))
+        (λ r (b , a , fa=b) (b' , a' , fa'=b') → Σ2Dep (ModuleRDist {M = B} r b b') (ModuleRDist {M = A} r a a') (toPathP (isSetModule B _ _ _ _)))
+        λ (b , a , fa=b) → Σ2Dep (ModuleLId {M = B} b) (ModuleLId {M = A} a) (toPathP (isSetModule B _ _ _ _))))
   where
     f' = ModuleHomomorphism.h f
     0B = Module.0m B
@@ -905,14 +1047,85 @@ ImHom R {A} {B} f =
     r ⋆Im (b , a , fa=b) = (r ⋆B b) , ((r ⋆A a) , (transport (cong (λ x → f' (r ⋆A a) ≡ (r ⋆B x)) fa=b)
                                                      (ModuleHomomorphism.scalar f r a)))
 
+--mapProp : {ℓ ℓ' : Level} → {A : Type ℓ} → {B : A → Type ℓ'} →
+--          (isProp B) → (A → B) → (∥ A ∥ → B)
+--mapProp propB f = {!!} {!map!}
+
+eqFunHProp : {ℓ ℓ' : Level} → {A : Type ℓ} → {B : Type ℓ'} → ∥ A ∥ → (A → ∥ B ∥) → ∥ (A → B) ∥
+eqFunHProp |a| f = recHprop propTruncIsProp (λ a → recHprop propTruncIsProp (λ b → ∣ (λ a → b) ∣) (f a)) |a| --rec propTruncIsProp f p
+eqFunHPropDep : {ℓ ℓ' : Level} → {A : Type ℓ} → {B : A → Type ℓ'} → ∥ A ∥ → ((a : A) → ∥ B a ∥) → ∥ ((a : A) → B a) ∥
+eqFunHPropDep {A = A} {B} |a| f = recHprop propTruncIsProp (λ a → {!!}) |a|
+  where
+    help : A → ∥ ((a : A) → ∥ B a ∥ ) ∥ → ∥ ((a : A) → B a) ∥
+    help a = map {!!}
+
 monicsAreKernelsRMod : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A S : Precategory.ob (RModPreCat R)} →
                        (k : Precategory.hom (RModPreCat R) S A) → isMonic (RMod {R = R}) k →
                        ∥ Σ (Precategory.ob (RModPreCat R))
                            (λ B → Σ (Precategory.hom (RModPreCat R) A B)
                                     (λ f → isKernel (RMod {R = R}) (hasZeroObjectRMod R) f k)) ∥
-monicsAreKernelsRMod R k kMon =
-  map (λ kcoK → fst kcoK , (CoKernel.coKer (snd kcoK)) , {!!})
+monicsAreKernelsRMod R {A} {S} k kMon =
+  map (λ kcoK → fst kcoK , (CoKernel.coKer (snd kcoK)) ,
+    transport (cong (isKernel (RMod {R = R}) (hasZeroObjectRMod R) (CoKernel.coKer (snd kcoK))) incImk∘toImk=k)
+              (PrecompIsoPreserveKernel incImk (CoKernel.coKer (snd kcoK)) CatIsoImk (hasZeroObjectRMod R) (incImkKer kcoK)))
       (hasAllCoKernelsRMod R k)
+  where
+    k' = ModuleHomomorphism.h k
+    _∘_ = Precategory.seq (RModPreCat R)
+    0a : (A B : Precategory.ob (RModPreCat R))  → Precategory.hom (RModPreCat R) A B
+    0a A B = ZeroArrow.f (getZeroArrow (RMod {R = R}) {A = A} {B = B} (hasZeroObjectRMod R))
+    id = Precategory.idn (RModPreCat R)
+    toImk : Precategory.hom (RModPreCat R) S (ImHom R k)
+    toImk = moduleHomo (λ s → k' s , s , refl)
+                       (λ s r → Σ2Dep (ModuleHomomorphism.linear k s r) refl (toPathP (isSetModule A _ _ _ _)))
+                       λ r s → Σ2Dep (ModuleHomomorphism.scalar k r s) refl (toPathP (isSetModule A _ _ _ _))
+    fromImk : Precategory.hom (RModPreCat R) (ImHom R k) S
+    fromImk = moduleHomo (λ (a , s , ks=a) → s)
+                         (λ (a , s , ks=a) (a' , s' , ks'=a') → refl)
+                         λ r (a , s , ks=a) → refl
+    CatIsoImk : CatIso {C = RModPreCat R} S (ImHom R k)
+    CatIsoImk = catiso toImk fromImk
+                       (ModuleHomo≡ (funExt (λ (a , s , ks=a) → Σ2Dep ks=a refl (toPathP (isSetModule A _ _ _ _)))))
+                       (ModuleHomo≡ refl)
+    incImk : Precategory.hom (RModPreCat R) (ImHom R k) A
+    incImk = moduleHomo (λ (a , s , ks=a) → a)
+                        (λ x y → refl)
+                        (λ x y → refl)
+    incImk∘toImk=k : (toImk ∘ incImk) ≡ k
+    incImk∘toImk=k = ModuleHomo≡ refl
+    incImkKer : (kcoK : Σ (Module R) (λ v → CoKernel RMod (hasZeroObjectRMod R) k)) → isKernel (RMod {R = R}) (hasZeroObjectRMod R) (CoKernel.coKer (snd kcoK)) incImk
+    incImkKer kcoK =
+      (kernelConst incImk
+                   ((incImk ∘ (CoKernel.coKer (snd kcoK)))                      ≡⟨ sym (Precategory.seq-λ (RModPreCat R) (incImk ∘ (CoKernel.coKer (snd kcoK)))) ⟩
+                   ((id (ImHom R k)) ∘ (incImk ∘ (CoKernel.coKer (snd kcoK))))  ≡⟨ cong (λ x → x ∘ (incImk ∘ (CoKernel.coKer (snd kcoK)))) (sym (CatIso.sec CatIsoImk)) ⟩
+                   ((fromImk ∘ toImk) ∘ (incImk ∘ (CoKernel.coKer (snd kcoK)))) ≡⟨ Precategory.seq-α (RModPreCat R) fromImk toImk (incImk ∘ (CoKernel.coKer (snd kcoK))) ⟩
+                   (fromImk ∘ (toImk ∘ (incImk ∘ (CoKernel.coKer (snd kcoK))))) ≡⟨ cong (λ x → fromImk ∘ x) (sym (Precategory.seq-α (RModPreCat R) toImk incImk (CoKernel.coKer (snd kcoK)))) ⟩
+                   (fromImk ∘ ((toImk ∘ incImk) ∘ (CoKernel.coKer (snd kcoK)))) ≡⟨ cong (λ x → fromImk ∘ (x ∘ CoKernel.coKer (snd kcoK))) incImk∘toImk=k ⟩
+                   (fromImk ∘ (k ∘ (CoKernel.coKer (snd kcoK))))                ≡⟨ cong (λ x → fromImk ∘ x) (CoKernel.coKerComp (snd kcoK)) ⟩
+                   (fromImk ∘ 0a S (fst kcoK))                                  ≡⟨ ZeroArrowCompLeft (RMod {R = R}) (hasZeroObjectRMod R) fromImk ⟩
+                    0a (ImHom R k) (fst kcoK) ∎)
+                   (λ {E} h hcoK=0 →
+                     {!!})
+                   {!!}) ,
+      refl
+    getRel : (x y : ⟨ A ⟩M) → [ x ] ≡ [ y ] → ∥ coKernelRel R k x y ∥
+    getRel = effective (λ a b → propTruncIsProp) (coKernelPropRelisEquiv R k)
+    eqTrans : (x y : ⟨ A ⟩M) → Path (⟨ A ⟩M / coKernelRel R k) [ x ] [ y ] → Path (⟨ A ⟩M / (λ x y → ∥ coKernelRel R k x y ∥)) [ x ] [ y ]
+    eqTrans x y Pathxy = λ i → Iso.fun truncRelIso (Pathxy i)
+    h'Help : {E : Module R} → (h : ModuleHomomorphism R E A) → h ∘ CoKernel.coKer (snd (hasAllCoKernelsRModNonTrunk R k)) ≡ 0a E (makeCoKernelObjRMod R k) →
+         (isMonic (RMod {R = R}) incImk) → Σ (ModuleHomomorphism R E (ImHom R k)) (λ h' → h' ∘ incImk ≡ h)
+    h'Help {E} h hcok=0 monInc =
+      recHprop (λ g g' → Σ≡ (monInc E (fst g) (fst g') (((fst g) ∘ incImk) ≡⟨ snd g ⟩
+                                                       h                   ≡⟨ sym (snd g') ⟩ 
+                                                       (fst g' ∘ incImk) ∎)) (toPathP (isSetModuleHomo E A _ _ _ _)))
+               (λ f →
+                 (moduleHomo {!λ e !}
+                             {!!}
+                             {!!}) ,
+                 {!!}) {!!}
+--               (getRel (ModuleHomomorphism.h h e) (ModuleHomomorphism.h (0a E A) e)
+--      (eqTrans (ModuleHomomorphism.h h e) (ModuleHomomorphism.h (0a E A) e) λ i → ModuleHomomorphism.h (hcok=0 i) e))
+
 
 --**************************************************************** Epic are coKernels *********************************************
 
