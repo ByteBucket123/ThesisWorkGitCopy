@@ -27,21 +27,34 @@ record Abelian {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') : Type (ℓ-suc (ℓ-
     AbHasCoProd : hasAllBinaryCoProducts C
     AbHasKernel : hasAllKernels C AbHasZero
     AbHasCoKernel : hasAllCoKernels C AbHasZero
-    AbMonicsAreKernels : {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) S A) → isMonic C k →
-                         ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isKernel C AbHasZero f k) ∥
-    AbEpicsAreCoKernels : {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) B S) → isEpic C k →
-                          ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isCoKernel C AbHasZero f k) ∥
+    AbMonicsAreKernels : {A S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) S A) →
+                         isMonic C k →
+                         ∥ Σ (Precategory.ob (UnivalentCategory.cat C))
+                             (λ B → Σ (Precategory.hom (UnivalentCategory.cat C) A B)
+                                      (λ f → isKernel C AbHasZero f k)) ∥
+                          
+    AbEpicsAreCoKernels : {B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) B S) →
+                          isEpic C k →
+                          ∥ Σ (Precategory.ob (UnivalentCategory.cat C))
+                              (λ A → Σ (Precategory.hom (UnivalentCategory.cat C) A B)
+                                       (λ f → isCoKernel C AbHasZero f k)) ∥
 
 --******************************************* Help Abelian *******************************************
 
 helpAbelianMonicsAreKernels : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (hasZero : hasZeroObject C) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-helpAbelianMonicsAreKernels C hasZero = {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) S A) →
-                                        isMonic C k → ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isKernel C hasZero f k) ∥
+helpAbelianMonicsAreKernels C hasZero = {A S : Precategory.ob (UnivalentCategory.cat C)} →
+                                        (k : Precategory.hom (UnivalentCategory.cat C) S A) → isMonic C k →
+                                        ∥ Σ (Precategory.ob (UnivalentCategory.cat C))
+                                            (λ B → Σ (Precategory.hom (UnivalentCategory.cat C) A B)
+                                                     (λ f → isKernel C hasZero f k)) ∥
 
 helpAbelianEpicsAreCoKernels : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (hasZero : hasZeroObject C) →
                                 Type (ℓ-suc (ℓ-max ℓ ℓ'))
-helpAbelianEpicsAreCoKernels C hasZero = {A B S : Precategory.ob (UnivalentCategory.cat C)} → (k : Precategory.hom (UnivalentCategory.cat C) B S) →
-                                          isEpic C k → ∥ Σ (Precategory.hom (UnivalentCategory.cat C) A B) (λ f → isCoKernel C hasZero f k) ∥
+helpAbelianEpicsAreCoKernels C hasZero = {B S : Precategory.ob (UnivalentCategory.cat C)} →
+                                         (k : Precategory.hom (UnivalentCategory.cat C) B S) → isEpic C k →
+                                         ∥ Σ (Precategory.ob (UnivalentCategory.cat C))
+                                             (λ A → Σ (Precategory.hom (UnivalentCategory.cat C) A B)
+                                                      (λ f → isCoKernel C hasZero f k)) ∥
 
 Abelian≡ : {ℓ ℓ' : Level} → {C : UnivalentCategory ℓ ℓ'} → {x y : Abelian C}
                → (p : Abelian.AbHasZero x ≡ Abelian.AbHasZero y)
@@ -65,16 +78,12 @@ isAbelianIsProp C p q = Abelian≡
                         (hasAllBinaryProductsIsProp C (Abelian.AbHasProd p) (Abelian.AbHasProd q))
                         (hasAllBinaryCoProductsIsProp C (Abelian.AbHasCoProd p) (Abelian.AbHasCoProd q))
                         (isProp→PathP (λ i → hasAllKernelsIsProp C (hasZeroObjectIsProp C (Abelian.AbHasZero p)
-                        (Abelian.AbHasZero q) i)) (Abelian.AbHasKernel p) (Abelian.AbHasKernel q))
+                          (Abelian.AbHasZero q) i)) (Abelian.AbHasKernel p) (Abelian.AbHasKernel q))
                         (isProp→PathP (λ i → hasAllCoKernelsIsProp C ((hasZeroObjectIsProp C (Abelian.AbHasZero p)
-                        (Abelian.AbHasZero q) i))) (Abelian.AbHasCoKernel p) (Abelian.AbHasCoKernel q))
-                        (isProp→PathP (λ i → λ r s → implicitFunExt (λ {A} → implicitFunExt (λ {B} → implicitFunExt (λ {S} →
-                        funExt (λ k → funExt (λ isMonicCk → propTruncIsProp (r k isMonicCk) (s k isMonicCk)))
-                        ))))
-                        (Abelian.AbMonicsAreKernels p)
-                        (Abelian.AbMonicsAreKernels q))
-                        (isProp→PathP (λ i → λ r s → implicitFunExt (λ {A} → implicitFunExt (λ {B} → implicitFunExt (λ {S} →
-                        funExt (λ k → funExt (λ isEpicCk → propTruncIsProp (r k isEpicCk) (s k isEpicCk)))
-                        ))))
-                        (Abelian.AbEpicsAreCoKernels p)
-                        (Abelian.AbEpicsAreCoKernels q))
+                          (Abelian.AbHasZero q) i))) (Abelian.AbHasCoKernel p) (Abelian.AbHasCoKernel q))
+                        (isProp→PathP (λ i r s → implicitFunExt (λ {A} → implicitFunExt (λ {S} → funExt (λ k →
+                          funExt (λ kMon → propTruncIsProp (r k kMon) (s k kMon)))))) (Abelian.AbMonicsAreKernels p)
+                          (Abelian.AbMonicsAreKernels q))
+                        (isProp→PathP (λ i r s → implicitFunExt (λ {B} → implicitFunExt (λ {S} → funExt (λ k →
+                          funExt (λ kEpic → propTruncIsProp (r k kEpic) (s k kEpic)))))) (Abelian.AbEpicsAreCoKernels p)
+                          (Abelian.AbEpicsAreCoKernels q))

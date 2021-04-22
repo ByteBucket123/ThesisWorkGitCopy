@@ -18,6 +18,8 @@ open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary.Base
 
 open import Cubical.HITs.PropositionalTruncation as PropTrunc using (∥_∥; ∣_∣; squash)
+                                                              renaming (elim2 to elim2HProp ;
+                                                                        rec to recHProp)
 open import Cubical.HITs.SetTruncation as SetTrunc using (∥_∥₂; ∣_∣₂; squash₂)
 
 open import ThesisWork.HelpFunctions
@@ -25,6 +27,16 @@ open import ThesisWork.PathInductionHelp
 open import Cubical.Foundations.Path
 --for funDepTr, this is somewhere in the standard library, but ai can't find it...
 --open import ThesisWork.SetSigmaType 
+
+HelpEq/ : {ℓ : Level} → {A : Type ℓ} → {R : A → A → Type ℓ} →
+         (p q : A / R) → ((p' : Σ A (λ a → [ a ] ≡ p)) →  (q' : Σ A (λ a → [ a ] ≡ q)) → [ fst p' ] ≡ [ fst q' ]) →
+         p ≡ q
+HelpEq/ p q [a]=[b] = recHProp (squash/ _ _) (recHProp (isPropΠ (λ x → squash/ _ _))
+                       (λ (a , [a]=p) (b , [b]=q) → p     ≡⟨ sym [a]=p ⟩
+                                                    [ a ] ≡⟨ [a]=[b] (a , [a]=p) (b , [b]=q) ⟩
+                                                    [ b ] ≡⟨ [b]=q ⟩
+                                                    q ∎)
+                       ([]surjective p)) ([]surjective q)
 
 rec3 : {ℓ : Level} {A B : Type ℓ} {R : A → A → Type ℓ} (Bset : isSet B)
        (f : A → A → A → B)

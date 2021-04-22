@@ -76,3 +76,42 @@ _^op : Precategory ℓ ℓ' → Precategory ℓ ℓ'
 (C ^op) .seq-α f g h = sym (C .seq-α _ _ _)
 
 open isCategory public
+
+--***************************************************** SetTruncation ************************************************
+
+open import Cubical.HITs.SetQuotients.Base
+open import Cubical.HITs.SetQuotients.Properties
+open import Cubical.Foundations.Isomorphism
+open import Cubical.HITs.PropositionalTruncation as PropTrunc using (∥_∥; ∣_∣; squash)
+
+truncRelIso : {ℓ : Level} → {A : Type ℓ} → {R : A → A → Type ℓ} → Iso (A / R) (A / (λ a b → ∥ R a b ∥))
+Iso.fun truncRelIso = rec squash/ [_] λ _ _ r → eq/ _ _ ∣ r ∣
+Iso.inv truncRelIso = rec squash/ [_] λ _ _ → PropTrunc.rec (squash/ _ _) λ r → eq/ _ _ r
+Iso.rightInv truncRelIso = elimProp (λ _ → squash/ _ _) λ _ → refl
+Iso.leftInv truncRelIso = elimProp (λ _ → squash/ _ _) λ _ → refl
+
+truncRelEquiv : {ℓ : Level} → {A : Type ℓ} → {R : A → A → Type ℓ} → A / R ≃ A / (λ a b → ∥ R a b ∥)
+truncRelEquiv = isoToEquiv truncRelIso
+
+
+open import Cubical.Relation.Binary.Base
+open BinaryRelation
+
+isEquivRel→effectiveIso : {ℓ : Level} → {A : Type ℓ} → {R : A → A → Type ℓ} →
+                          isPropValued R → isEquivRel R → (a b : A) → Iso ([ a ] ≡ [ b ]) (R a b)
+Iso.fun (isEquivRel→effectiveIso {R = R} Rprop Req a b) = effective Rprop Req a b
+Iso.inv (isEquivRel→effectiveIso {R = R} Rprop Req a b) = eq/ a b
+Iso.rightInv (isEquivRel→effectiveIso {R = R} Rprop Req a b) _ = Rprop a b _ _
+Iso.leftInv (isEquivRel→effectiveIso {R = R} Rprop Req a b) _ = squash/ _ _ _ _
+
+isEquivRel→TruncIso : {ℓ : Level} → {A : Type ℓ} → {R : A → A → Type ℓ} → isEquivRel R → (a b : A) → Iso ([ a ] ≡ [ b ])  ∥ R a b ∥
+isEquivRel→TruncIso {A = A} {R = R} Req a b =
+  compIso (isProp→Iso (squash/ _ _) (squash/ _ _)
+    (cong (Iso.fun truncRelIso)) (cong (Iso.inv truncRelIso)))
+      (isEquivRel→effectiveIso  (λ _ _ → PropTrunc.propTruncIsProp) ∥R∥eq a b)
+  where
+    open isEquivRel
+    ∥R∥eq : isEquivRel  λ a b → ∥ R a b ∥
+    reflexive ∥R∥eq a = ∣ reflexive Req a ∣
+    symmetric ∥R∥eq a b = PropTrunc.map (symmetric Req a b)
+    transitive ∥R∥eq a b c = PropTrunc.map2 (transitive Req a b c)

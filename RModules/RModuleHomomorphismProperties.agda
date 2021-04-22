@@ -31,13 +31,14 @@ open import Cubical.Algebra.Semigroup
 open import Cubical.Algebra.Monoid.Base
 open import Cubical.Algebra.Group.Base
 open import Cubical.Algebra.AbGroup.Base
+open import Cubical.Algebra.Ring.Base
 open import Cubical.Algebra.Module.Base
 
 
 --********************************************** TODO : These should be moved **********************************************
 
 Module+Isasso : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M : Module R} → (x y z : ⟨ M ⟩M) →
-               (M Module.+ x) ((M Module.+ y) z) ≡ (M Module.+ ((M Module.+ x) y)) z
+                (M Module.+ x) ((M Module.+ y) z) ≡ (M Module.+ ((M Module.+ x) y)) z
 Module+Isasso {M = M} = IsSemigroup.assoc (IsMonoid.isSemigroup (IsGroup.isMonoid (IsAbGroup.isGroup (IsLeftModule.+-isAbGroup
                       (IsModule.isLeftModule (Module.isMod M))))))
 
@@ -79,6 +80,65 @@ ModuleLId : {ℓ : Level} → {R : CommutativeRing {ℓ}} → {M : Module R} →
                  ((M Module.⋆ (CommutativeRingStr.1r (snd R))) x) ≡ x
 ModuleLId {M = M} = IsLeftModule.⋆-lid (IsModule.isLeftModule (Module.isMod M))
 
+--******************************************************* Ring Help *****************************************************************
+
+Ring+Isasso : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (x y z : ⟨ R ⟩) →
+              ((snd R) CommutativeRingStr.+ x) (((snd R) CommutativeRingStr.+ y) z) ≡
+              ((snd R) CommutativeRingStr.+ (((snd R) CommutativeRingStr.+ x) y)) z
+Ring+Isasso R x y z = IsSemigroup.assoc (IsMonoid.isSemigroup (IsGroup.isMonoid (IsAbGroup.isGroup (IsRing.+-isAbGroup
+                        (IsCommutativeRing.isRing (CommutativeRingStr.isCommutativeRing (snd R))))))) x y z
+
+RingZeroRight : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (x : ⟨ R ⟩) →
+                ((snd R) CommutativeRingStr.+ x) (CommutativeRingStr.0r (snd R)) ≡ x
+RingZeroRight R x = fst (IsMonoid.identity (IsGroup.isMonoid (IsAbGroup.isGroup (IsRing.+-isAbGroup (IsCommutativeRing.isRing
+                      (CommutativeRingStr.isCommutativeRing (snd R)))))) x)
+
+RingZeroLeft : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (x : ⟨ R ⟩) →
+                ((snd R) CommutativeRingStr.+ (CommutativeRingStr.0r (snd R))) x ≡ x
+RingZeroLeft R x = snd (IsMonoid.identity (IsGroup.isMonoid (IsAbGroup.isGroup (IsRing.+-isAbGroup (IsCommutativeRing.isRing
+                      (CommutativeRingStr.isCommutativeRing (snd R)))))) x)
+
+RingInvRight : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (x : ⟨ R ⟩) →
+                 ((snd R) CommutativeRingStr.+ x) ((CommutativeRingStr.- (snd R)) x) ≡ CommutativeRingStr.0r (snd R)
+RingInvRight R x = fst (IsGroup.inverse (IsAbGroup.isGroup (IsRing.+-isAbGroup (IsCommutativeRing.isRing
+                     (CommutativeRingStr.isCommutativeRing (snd R))))) x)
+
+RingInvLeft : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (x : ⟨ R ⟩) →
+              ((snd R) CommutativeRingStr.+ ((CommutativeRingStr.- (snd R)) x)) x ≡ CommutativeRingStr.0r (snd R)
+RingInvLeft R x = snd (IsGroup.inverse (IsAbGroup.isGroup (IsRing.+-isAbGroup (IsCommutativeRing.isRing
+                     (CommutativeRingStr.isCommutativeRing (snd R))))) x)
+
+RingIsAb : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (x y : ⟨ R ⟩) →
+           ((snd R) CommutativeRingStr.+ x) y ≡ ((snd R) CommutativeRingStr.+ y) x
+RingIsAb R = IsAbGroup.comm (IsRing.+-isAbGroup (IsCommutativeRing.isRing (CommutativeRingStr.isCommutativeRing (snd R))))
+
+Ring·Isasso : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (r s t : ⟨ R ⟩) →
+              ((snd R) CommutativeRingStr.· r) (((snd R) CommutativeRingStr.· s) t) ≡
+              ((snd R) CommutativeRingStr.· (((snd R) CommutativeRingStr.· r) s)) t
+Ring·Isasso R = IsSemigroup.assoc (IsMonoid.isSemigroup (IsRing.·-isMonoid (IsCommutativeRing.isRing
+                  (CommutativeRingStr.isCommutativeRing (snd R)))))
+
+Ring·OneRight : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (r : ⟨ R ⟩) →
+                ((snd R) CommutativeRingStr.· r) (CommutativeRingStr.1r (snd R)) ≡ r
+Ring·OneRight R r = fst (IsMonoid.identity (IsRing.·-isMonoid (IsCommutativeRing.isRing
+                      (CommutativeRingStr.isCommutativeRing (snd R)))) r)
+
+Ring·OneLeft : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (r : ⟨ R ⟩) →
+               ((snd R) CommutativeRingStr.· (CommutativeRingStr.1r (snd R))) r ≡ r
+Ring·OneLeft R r = snd (IsMonoid.identity (IsRing.·-isMonoid (IsCommutativeRing.isRing
+                      (CommutativeRingStr.isCommutativeRing (snd R)))) r)
+
+Ring·DistRight : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (r s t : ⟨ R ⟩) →
+                 ((snd R) CommutativeRingStr.· r) (((snd R) CommutativeRingStr.+ s) t) ≡
+                 ((snd R) CommutativeRingStr.+ (((snd R) CommutativeRingStr.· r) s)) (((snd R) CommutativeRingStr.· r) t)
+Ring·DistRight R r s t = fst (IsRing.dist (IsCommutativeRing.isRing (CommutativeRingStr.isCommutativeRing (snd R))) r s t)
+
+Ring·DistLeft : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (r s t : ⟨ R ⟩) →
+                ((snd R) CommutativeRingStr.· (((snd R) CommutativeRingStr.+ r) s)) t ≡
+                ((snd R) CommutativeRingStr.+ (((snd R) CommutativeRingStr.· r) t)) (((snd R) CommutativeRingStr.· s) t)
+Ring·DistLeft R r s t = snd ((IsRing.dist (IsCommutativeRing.isRing (CommutativeRingStr.isCommutativeRing (snd R))) r s t))
+
+
 --******************************************************* Module Properties *********************************************************************
 --These should also be moved.
 
@@ -114,6 +174,58 @@ ModuleMulPresZero {R = R} {M = M} r =
      
       x≡x+M0 : (x : ⟨ M ⟩M ) → x ≡ x +M 0M
       x≡x+M0 x = sym (ModuleZeroRight {M = M} x)
+
+--**************************************************** Ring Properties *****************************************************************
+
+ModuleMulZeroRing : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (m : ⟨ M ⟩M) →
+                    (M Module.⋆ CommutativeRingStr.0r (snd R)) m ≡ Module.0m M
+ModuleMulZeroRing {R = R} M m =
+  (0R ⋆M m)                                    ≡⟨ sym (ModuleZeroRight {M = M} (0R ⋆M m)) ⟩
+  ((0R ⋆M m) +M 0M)                            ≡⟨ cong (λ x → (0R ⋆M m) +M x) (sym (ModuleInvRight {M = M} (0R ⋆M m))) ⟩
+  ((0R ⋆M m) +M ((0R ⋆M m) +M (-M (0R ⋆M m)))) ≡⟨ Module+Isasso {M = M} (0R ⋆M m) (0R ⋆M m) (-M (0R ⋆M m)) ⟩
+  (((0R ⋆M m) +M (0R ⋆M m)) +M (-M (0R ⋆M m))) ≡⟨ cong (λ x → x +M (-M (0R ⋆M m))) (sym (ModuleLDist {M = M} 0R 0R m)) ⟩
+  (((0R +R 0R) ⋆M m) +M (-M (0R ⋆M m)))        ≡⟨ cong (λ x → (x ⋆M m) +M (-M (0R ⋆M m))) (RingZeroRight R 0R) ⟩
+  ((0R ⋆M m) +M (-M (0R ⋆M m)))                ≡⟨ ModuleInvRight {M = M} (0R ⋆M m) ⟩
+  0M ∎
+    where
+      0M = Module.0m M
+      _+M_ : ⟨ M ⟩M → ⟨ M ⟩M  → ⟨ M ⟩M
+      x +M y = (M Module.+ x) y
+      _⋆M_ : ⟨ R ⟩ → ⟨ M ⟩M  → ⟨ M ⟩M
+      a ⋆M b = (M Module.⋆ a) b
+      -M_ : ⟨ M ⟩M  → ⟨ M ⟩M
+      -M x = (Module.- M) x
+      0R = CommutativeRingStr.0r (snd R)
+      _+R_ : ⟨ R ⟩ → ⟨ R ⟩  → ⟨ R ⟩
+      r +R s = ((snd R) CommutativeRingStr.+ r) s
+      -R_ : ⟨ R ⟩  → ⟨ R ⟩
+      -R s = (CommutativeRingStr.- (snd R)) s
+
+
+ModuleSubMulRing : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (m : ⟨ M ⟩M) → (r : ⟨ R ⟩) →
+                    (M Module.⋆ (CommutativeRingStr.- (snd R)) r) m ≡ (Module.- M) ((M Module.⋆ r) m)
+ModuleSubMulRing {R = R} M m r =
+  ((-R r) ⋆M m)                                  ≡⟨ sym (ModuleZeroRight {M = M} ((-R r) ⋆M m)) ⟩
+  (((-R r) ⋆M m) +M 0M)                          ≡⟨ cong (λ x → ((-R r) ⋆M m) +M x) (sym (ModuleInvRight {M = M} (r ⋆M m))) ⟩
+  (((-R r) ⋆M m) +M ((r ⋆M m) +M (-M (r ⋆M m)))) ≡⟨ Module+Isasso {M = M} ((-R r) ⋆M m) (r ⋆M m) (-M (r ⋆M m)) ⟩
+  ((((-R r) ⋆M m) +M (r ⋆M m)) +M (-M (r ⋆M m))) ≡⟨ cong (λ x → x +M (-M (r ⋆M m))) (sym (ModuleLDist {M = M} (-R r) r m)) ⟩
+  ((((-R r) +R r) ⋆M m) +M (-M (r ⋆M m)))        ≡⟨ cong (λ x → (x ⋆M m) +M (-M (r ⋆M m))) (RingInvLeft R r) ⟩
+  ((0R ⋆M m) +M (-M (r ⋆M m)))                   ≡⟨ cong (λ x → x +M (-M (r ⋆M m))) (ModuleMulZeroRing M m) ⟩
+  (0M +M (-M (r ⋆M m)))                          ≡⟨ ModuleZeroLeft {M = M} (-M (r ⋆M m)) ⟩
+  (-M (r ⋆M m)) ∎
+ where
+      0M = Module.0m M
+      _+M_ : ⟨ M ⟩M → ⟨ M ⟩M  → ⟨ M ⟩M
+      x +M y = (M Module.+ x) y
+      _⋆M_ : ⟨ R ⟩ → ⟨ M ⟩M  → ⟨ M ⟩M
+      a ⋆M b = (M Module.⋆ a) b
+      -M_ : ⟨ M ⟩M  → ⟨ M ⟩M
+      -M x = (Module.- M) x
+      0R = CommutativeRingStr.0r (snd R)
+      _+R_ : ⟨ R ⟩ → ⟨ R ⟩  → ⟨ R ⟩
+      r +R s = ((snd R) CommutativeRingStr.+ r) s
+      -R_ : ⟨ R ⟩  → ⟨ R ⟩
+      -R s = (CommutativeRingStr.- (snd R)) s
 
 
 --******************************************************** Homo properties ***********************************************************************
@@ -215,4 +327,27 @@ ModuleHomomorphismLinSub {M = M} {N = N} m h =
       assoN : (x y z : ⟨ N ⟩M) → x +N (y +N z) ≡ (x +N y) +N z
       assoN = Module+Isasso {M = N}
       
-
+ModuleHomoInvIsHomo :  {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M N : Module R) → (f : ModuleHomomorphism R M N) →
+                       (fInv : ⟨ N ⟩M → ⟨ M ⟩M) → ((λ x → ModuleHomomorphism.h f (fInv x)) ≡ λ x → x) →
+                       ((λ x → fInv (ModuleHomomorphism.h f x)) ≡ λ x → x) → ModuleHomomorphism R N M
+ModuleHomoInvIsHomo {R = R} M N f fInv ffInv=id fInvf=id =
+  moduleHomo fInv
+             (λ x y → fInv (x +N y)                         ≡⟨ (cong₂ (λ x y → fInv (x +N y)) (funExt⁻ (sym ffInv=id) x)
+                                                                                              (funExt⁻ (sym ffInv=id) y)) ⟩
+                      fInv ((f' (fInv x)) +N (f' (fInv y))) ≡⟨ cong fInv (sym (ModuleHomomorphism.linear f (fInv x) (fInv y))) ⟩
+                      fInv (f' ((fInv x) +M (fInv y)))      ≡⟨ funExt⁻ fInvf=id ((fInv x) +M (fInv y)) ⟩
+                      ((fInv x) +M (fInv y)) ∎)
+             λ r x → fInv (r ⋆N x)             ≡⟨ cong (λ x → fInv (r ⋆N x)) (funExt⁻ (sym ffInv=id) x) ⟩
+                     fInv (r ⋆N (f' (fInv x))) ≡⟨ cong fInv (sym (ModuleHomomorphism.scalar f r (fInv x))) ⟩
+                     fInv (f' (r ⋆M (fInv x))) ≡⟨ funExt⁻ fInvf=id (r ⋆M (fInv x)) ⟩
+                     (r ⋆M (fInv x)) ∎
+    where
+      f' = ModuleHomomorphism.h f
+      _+M_ : ⟨ M ⟩M → ⟨ M ⟩M  → ⟨ M ⟩M
+      x +M y = (M Module.+ x) y
+      _+N_ : ⟨ N ⟩M → ⟨ N ⟩M  → ⟨ N ⟩M
+      x +N y = (N Module.+ x) y
+      _⋆M_ : ⟨ R ⟩ → ⟨ M ⟩M  → ⟨ M ⟩M
+      r ⋆M x = (M Module.⋆ r) x
+      _⋆N_ : ⟨ R ⟩ → ⟨ N ⟩M  → ⟨ N ⟩M
+      r ⋆N x = (N Module.⋆ r) x
