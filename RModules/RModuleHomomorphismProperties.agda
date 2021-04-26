@@ -175,6 +175,63 @@ ModuleMulPresZero {R = R} {M = M} r =
       x≡x+M0 : (x : ⟨ M ⟩M ) → x ≡ x +M 0M
       x≡x+M0 x = sym (ModuleZeroRight {M = M} x)
 
+ModuleCommuteAsso : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (x y z v : ⟨ M ⟩M) →
+                    (M Module.+ ((M Module.+ x) y)) ((M Module.+ z) v) ≡ (M Module.+ ((M Module.+ x) z)) ((M Module.+ y) v)
+ModuleCommuteAsso {R = R} M x y z v =
+  ((x +M y) +M (z +M v)) ≡⟨ sym (Module+Isasso {M = M} x y (z +M v)) ⟩
+  (x +M (y +M (z +M v))) ≡⟨ cong (λ w → x +M w) (Module+Isasso {M = M} y z v) ⟩
+  (x +M ((y +M z) +M v)) ≡⟨ cong (λ w → x +M (w +M v)) (ModuleIsAb {M = M} y z) ⟩
+  (x +M ((z +M y) +M v)) ≡⟨ cong (λ w → x +M w) (sym (Module+Isasso {M = M} z y v)) ⟩
+  (x +M (z +M (y +M v))) ≡⟨ Module+Isasso {M = M} x z (y +M v) ⟩
+  ((x +M z) +M (y +M v)) ∎
+    where
+      _+M_ : ⟨ M ⟩M → ⟨ M ⟩M  → ⟨ M ⟩M
+      x +M y = (M Module.+ x) y
+      
+ModuleInvDist : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (x y : ⟨ M ⟩M) →
+                  (Module.- M) ((M Module.+ x) y) ≡ (M Module.+ ((Module.- M) x)) ((Module.- M) y)
+ModuleInvDist {R = R} M x y =
+  (-M (x +M y))                                       ≡⟨ sym (ModuleZeroRight {M = M} (-M (x +M y))) ⟩
+  ((-M (x +M y)) +M 0M)                               ≡⟨ cong (λ w → (-M (x +M y)) +M w) (sym (ModuleInvRight {M = M} x)) ⟩
+  ((-M (x +M y)) +M (x +M (-M x)))                    ≡⟨ sym (ModuleZeroRight {M = M} ((-M (x +M y)) +M (x +M (-M x)))) ⟩
+  (((-M (x +M y)) +M (x +M (-M x))) +M 0M)            ≡⟨ cong (λ w → ((-M (x +M y)) +M (x +M (-M x))) +M w)
+                                                              (sym (ModuleInvRight {M = M} y)) ⟩
+  (((-M (x +M y)) +M (x +M (-M x))) +M (y +M (-M y))) ≡⟨ sym (Module+Isasso {M = M} (-M (x +M y)) (x +M (-M x)) (y +M (-M y))) ⟩
+  ((-M (x +M y)) +M ((x +M (-M x)) +M (y +M (-M y)))) ≡⟨ cong (λ w → (-M (x +M y)) +M w) (ModuleCommuteAsso M x (-M x) y (-M y)) ⟩
+  ((-M (x +M y)) +M ((x +M y) +M ((-M x) +M (-M y)))) ≡⟨ Module+Isasso {M = M} (-M (x +M y)) (x +M y) ((-M x) +M (-M y)) ⟩
+  (((-M (x +M y)) +M (x +M y)) +M ((-M x) +M (-M y))) ≡⟨ cong (λ w → w +M ((-M x) +M (-M y))) (ModuleInvLeft {M = M} (x +M y)) ⟩
+  (0M +M ((-M x) +M (-M y)))                          ≡⟨ ModuleZeroLeft {M = M} ((-M x) +M (-M y)) ⟩
+  ((-M x) +M (-M y)) ∎
+    where
+      0M = Module.0m M
+      _+M_ : ⟨ M ⟩M → ⟨ M ⟩M  → ⟨ M ⟩M
+      x +M y = (M Module.+ x) y
+      _⋆M_ : ⟨ R ⟩ → ⟨ M ⟩M  → ⟨ M ⟩M
+      r ⋆M x = (M Module.⋆ r) x
+      -M_ : ⟨ M ⟩M  → ⟨ M ⟩M
+      -M x = (Module.- M) x
+
+ModuleInvCommScalar : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (r : ⟨ R ⟩) → (x : ⟨ M ⟩M) →
+                      (Module.- M) ((M Module.⋆ r) x) ≡ (M Module.⋆ r) ((Module.- M) x)
+ModuleInvCommScalar {R = R} M r x =
+  (-M (r ⋆M x))                                  ≡⟨ sym (ModuleZeroRight {M = M} (-M (r ⋆M x))) ⟩
+  ((-M (r ⋆M x)) +M 0M)                          ≡⟨ cong (λ w → (-M (r ⋆M x)) +M w) (sym (ModuleMulPresZero {M = M} r)) ⟩
+  ((-M (r ⋆M x)) +M (r ⋆M 0M))                   ≡⟨ cong (λ w → (-M (r ⋆M x)) +M (r ⋆M w)) (sym (ModuleInvRight {M = M} x)) ⟩
+  ((-M (r ⋆M x)) +M (r ⋆M (x +M (-M x))))        ≡⟨ cong (λ w → (-M (r ⋆M x)) +M w) (ModuleRDist {M = M} r x (-M x)) ⟩
+  ((-M (r ⋆M x)) +M ((r ⋆M x) +M (r ⋆M (-M x)))) ≡⟨ Module+Isasso {M = M} (-M (r ⋆M x)) (r ⋆M x) (r ⋆M (-M x)) ⟩
+  (((-M (r ⋆M x)) +M (r ⋆M x)) +M (r ⋆M (-M x))) ≡⟨ cong (λ w → w +M (r ⋆M (-M x))) (ModuleInvLeft {M = M} (r ⋆M x)) ⟩
+  (0M +M (r ⋆M (-M x)))                          ≡⟨ ModuleZeroLeft {M = M} (r ⋆M (-M x)) ⟩
+  (r ⋆M (-M x)) ∎
+    where
+      0M = Module.0m M
+      _+M_ : ⟨ M ⟩M → ⟨ M ⟩M  → ⟨ M ⟩M
+      x +M y = (M Module.+ x) y
+      _⋆M_ : ⟨ R ⟩ → ⟨ M ⟩M  → ⟨ M ⟩M
+      r ⋆M x = (M Module.⋆ r) x
+      -M_ : ⟨ M ⟩M  → ⟨ M ⟩M
+      -M x = (Module.- M) x
+
+
 --**************************************************** Ring Properties *****************************************************************
 
 ModuleMulZeroRing : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (m : ⟨ M ⟩M) →

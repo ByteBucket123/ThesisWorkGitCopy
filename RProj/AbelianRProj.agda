@@ -3,12 +3,12 @@
 module ThesisWork.RProj.AbelianRProj where
 
 open import Cubical.Foundations.Prelude
---open import ThesisWork.HelpFunctions
+open import ThesisWork.HelpFunctions
 --open import Cubical.Data.Sigma.Base
 open import ThesisWork.BasicCategoryTheory.Limits.InitialObject
 --open import ThesisWork.BasicCategoryTheory.Limits.TerminalObject
 open import ThesisWork.BasicCategoryTheory.Limits.ZeroObject
---open import ThesisWork.BasicCategoryTheory.Limits.BinaryProduct
+open import ThesisWork.BasicCategoryTheory.Limits.BinaryProduct
 --open import ThesisWork.BasicCategoryTheory.Limits.BinaryCoProduct
 --open import ThesisWork.BasicCategoryTheory.Limits.Kernel
 --open import ThesisWork.BasicCategoryTheory.Limits.CoKernel
@@ -22,9 +22,9 @@ open import ThesisWork.RModules.CommutativeRing
 --open import ThesisWork.RModules.RModuleHomomorphism
 open import ThesisWork.RModules.RModuleHomomorphismProperties
 open import ThesisWork.RModules.RModule
---open import ThesisWork.RModules.RMod
+open import ThesisWork.RModules.RMod
 --open import Cubical.Foundations.Structure
---open import ThesisWork.CompatibilityCode
+open import ThesisWork.CompatibilityCode
 --open import ThesisWork.SetSigmaType
 --open import Agda.Builtin.Cubical.HCompU
 --open import Cubical.Core.Primitives renaming
@@ -35,7 +35,7 @@ open import ThesisWork.RModules.RModule
 open import Cubical.HITs.PropositionalTruncation.Base
 --open import ThesisWork.RModules.RModuleProperties
 --open import ThesisWork.SetQuotientHelp
---open import ThesisWork.BasicCategoryTheory.ExtendedCategoryDefinitions
+open import ThesisWork.BasicCategoryTheory.ExtendedCategoryDefinitions
 --open import ThesisWork.BasicCategoryTheory.ElementaryArrowProperties
 --open import Cubical.HITs.PropositionalTruncation.Properties renaming
 --  (elim to elimHprop ;
@@ -44,7 +44,7 @@ open import Cubical.HITs.PropositionalTruncation.Base
 --   rec to recHprop ;
 --   rec2 to rec2Hprop )
 
---open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Isomorphism
 --open import Cubical.Foundations.Univalence
 --open import Cubical.Relation.Binary.Base
 --open import ThesisWork.RModules.MonicToInjective
@@ -57,22 +57,71 @@ open import ThesisWork.RProj.FinitelyGeneratedModule
 open import Cubical.Data.Nat.Base
 open import Cubical.Data.Vec.Base
 open import ThesisWork.RProj.ProjModuleHomo
+open import Cubical.Foundations.Equiv
 
---RProjHasZero : {ℓ : Level} → (R : CommutativeRing {ℓ}) → hasZeroObject (RProj R)
---RProjHasZero R = (Module→ProjModule (zeroModule R) isProjectiveZero isFinGenZero) ,CatWithZero
---                   ((λ B → (projModuleHomo (λ * → ProjModule.0m B) (λ * * → sym (ModuleZeroRight {M = ProjModule→Module B}
---                   (ProjModule.0m B))) λ r * → sym (ModuleMulPresZero {M = ProjModule→Module B} r)) ,
---                   λ hom → ProjModuleHomo≡ (funExt (λ * → sym (
---                     ProjectiveModuleHomomorphism.h hom * ≡⟨ {!!} ⟩
---                     ProjectiveModuleHomomorphism.h hom * ≡⟨ {!!} ⟩
---                     ProjModule.0m B ∎)))) ,Zero {!!})
---  where
---    _⋆Z_ = Module._⋆_ (zeroModule R)
+private
+  ob = Precategory.ob
+  cat = UnivalentCategory.cat
+  hom = Precategory.hom
+  id = Precategory.idn
+  idl = Precategory.seq-λ
+  idr = Precategory.seq-ρ
+  catAsso = Precategory.seq-α
+  _,_∘_ = Precategory.seq
+  _<_×_> = BinaryProduct.<_×_>
 
---    isProjectiveZero : isProjectiveModule R (zeroModule R)
---    isProjectiveZero {E} f e eSurj = zeroModuleisInitialObject R E
---    isFinGenZero : isFinitelyGenerated (zeroModule R)
---    isFinGenZero = ∣ (suc zero , * ∷ [] , λ * → ((CommutativeRingStr.1r (snd R)) ∷ []) ,
---                       (sumGenerators R (zeroModule R) (* ∷ []) ((CommutativeRingStr.1r (snd R)) ∷ []) ≡⟨ refl ⟩
---                       ((CommutativeRingStr.1r (snd R)) ⋆Z *) ≡⟨ ModuleLId {M = zeroModule R} * ⟩
---                       * ∎)) ∣
+HomSets≡ : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M N : ProjModule R) →
+           Precategory.hom (UnivalentCategory.cat (RProj R)) M N ≡
+           Precategory.hom (UnivalentCategory.cat (RMod {R = R})) (ProjModule→Module M) (ProjModule→Module N)
+HomSets≡ {R = R} M N = ProjModHom≡ModHom
+
+RProjHasZero : {ℓ : Level} → (R : CommutativeRing {ℓ}) → hasZeroObject (RProj R)
+RProjHasZero R = ZeroProjModule ,CatWithZero
+                   ((λ B → transport (cong isContr (sym (HomSets≡ ZeroProjModule B)))
+                                     (zeroModuleisInitialObject R (ProjModule→Module B))) ,Zero
+                   λ B → transport (cong isContr (sym (HomSets≡ B ZeroProjModule)))
+                                   (zeroModuleisTerminalObject R (ProjModule→Module B)))
+  where
+    _⋆Z_ = Module._⋆_ (zeroModule R)
+
+    isProjectiveZero : isProjectiveModule R (zeroModule R)
+    isProjectiveZero {E} f e eSurj = zeroModuleisInitialObject R E
+    isFinGenZero : isFinitelyGenerated (zeroModule R)
+    isFinGenZero = ∣ (suc zero , * ∷ [] , λ * → ((CommutativeRingStr.1r (snd R)) ∷ []) ,
+                       (sumGenerators R (zeroModule R) (* ∷ []) ((CommutativeRingStr.1r (snd R)) ∷ []) ≡⟨ refl ⟩
+                       ((CommutativeRingStr.1r (snd R)) ⋆Z *) ≡⟨ ModuleLId {M = zeroModule R} * ⟩
+                       * ∎)) ∣
+
+    ZeroProjModule = Module→ProjModule (zeroModule R) isProjectiveZero isFinGenZero
+
+hasAllBinaryProductsRProj : {ℓ : Level} → (R : CommutativeRing {ℓ}) → hasAllBinaryProducts (RProj R)
+hasAllBinaryProductsRProj R A B = ∣ ({!!} , {!!}) ∣
+  where
+    prodModule = productOfModules (ProjModule→Module A) (ProjModule→Module B)
+    isProjectiveProd : isProjectiveModule R prodModule
+    isProjectiveProd {E} f e esurj = {!!}
+    isFinGenProd : isFinitelyGenerated prodModule
+    isFinGenProd = {!!}
+
+    ProdProj = Module→ProjModule prodModule {!!} {!!}
+
+-- RProjHasZero : {ℓ : Level} → (R : CommutativeRing {ℓ}) → hasZeroObject (RProj R)
+-- RProjHasZero R = (Module→ProjModule (zeroModule R) isProjectiveZero isFinGenZero) ,CatWithZero
+--                    ((λ B → (projModuleHomo (λ * → ProjModule.0m B) (λ * * → sym (ModuleZeroRight {M = ProjModule→Module B}
+--                    (ProjModule.0m B))) λ r * → sym (ModuleMulPresZero {M = ProjModule→Module B} r)) ,
+--                    λ hom → ProjModuleHomo≡ (funExt (λ * → sym (
+--                      ProjectiveModuleHomomorphism.h hom * ≡⟨ cong (ProjectiveModuleHomomorphism.h hom)
+--                                                                   (isPropOneElem * (Module.0m (zeroModule R))) ⟩
+--                      ProjectiveModuleHomomorphism.h hom (Module.0m (zeroModule R)) ≡⟨ ModuleHomomorphismPreserveZero
+--                                                                                         (ProjModHom→ModHom hom) ⟩
+--                      ProjModule.0m B ∎)))) ,Zero {!!})
+--   where
+--     _⋆Z_ = Module._⋆_ (zeroModule R)
+
+--     isProjectiveZero : isProjectiveModule R (zeroModule R)
+--     isProjectiveZero {E} f e eSurj = zeroModuleisInitialObject R E
+--     isFinGenZero : isFinitelyGenerated (zeroModule R)
+--     isFinGenZero = ∣ (suc zero , * ∷ [] , λ * → ((CommutativeRingStr.1r (snd R)) ∷ []) ,
+--                        (sumGenerators R (zeroModule R) (* ∷ []) ((CommutativeRingStr.1r (snd R)) ∷ []) ≡⟨ refl ⟩
+--                        ((CommutativeRingStr.1r (snd R)) ⋆Z *) ≡⟨ ModuleLId {M = zeroModule R} * ⟩
+--                        * ∎)) ∣

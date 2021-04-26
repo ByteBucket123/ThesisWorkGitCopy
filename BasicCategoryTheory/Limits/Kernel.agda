@@ -33,11 +33,21 @@ record Kernel {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') {A B S : Precategory.o
     kerFactors : kernelFactors C hasZero f ker
     kerFactorsUnique : isMonic C ker
 
-
 isKernel :  {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {A B S : Precategory.ob (UnivalentCategory.cat C)} →
             hasZeroObject C → (f : Precategory.hom (UnivalentCategory.cat C) A B) → (k : Precategory.hom (UnivalentCategory.cat C) S A)
             → Type (ℓ-suc (ℓ-max ℓ ℓ'))
 isKernel C {S = S} hasZero f k = Σ (Kernel C {S = S} hasZero f) λ ker → Kernel.ker ker ≡ k
+
+record isKernel' {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') {A B S : Precategory.ob (UnivalentCategory.cat C)}
+       (hasZero : CategoryWithZeroObject C)
+       (f : Precategory.hom (UnivalentCategory.cat C) A B)
+       (ker : Precategory.hom (UnivalentCategory.cat C) S A) : Type (ℓ-suc (ℓ-max ℓ  ℓ')) where
+  constructor isKernel'Const
+  field
+    kerComp : Precategory.seq (UnivalentCategory.cat C) ker f ≡ (ZeroArrow.f (getZeroArrow C hasZero))
+    kerFactors : kernelFactors C hasZero f ker
+    kerFactorsUnique : isMonic C ker
+
 
 -- --************************************************* Help Functions ********************************************
 

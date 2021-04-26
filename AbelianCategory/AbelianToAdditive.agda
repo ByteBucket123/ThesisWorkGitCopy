@@ -21,6 +21,8 @@ open import ThesisWork.AbelianCategory.Abelian
 open import ThesisWork.BasicCategoryTheory.ElementaryArrowProperties
 open import ThesisWork.AbelianCategory.AdditiveCategory
 
+open import ThesisWork.AbelianCategory.AbelianHelp
+
 private
   ob = Precategory.ob
   cat = UnivalentCategory.cat
@@ -31,9 +33,10 @@ private
   catAsso = Precategory.seq-α
   _,_∘_ = Precategory.seq
   _<_×_> = BinaryProduct.<_×_>
-  AbEpicsAreCoKernelsNonProp : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (abel : Abelian C) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-  AbEpicsAreCoKernelsNonProp C abel = {A B S : ob (cat C)} → (k : hom (cat C) B S) → isEpic C k →
-                                      Σ (hom (cat C) A B) (λ f → isCoKernel C (Abelian.AbHasZero abel) f k)
+  AbEpicsAreCoKerOfKer : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (abel : Abelian C) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
+  AbEpicsAreCoKerOfKer C abel = {B S : ob (cat C)} → (k : hom (cat C) B S) → isEpic C k →
+                                      (ker : Kernel C {S = S} (Abelian.AbHasZero abel) k) →
+                                      isCoKernel C (Abelian.AbHasZero abel) (Kernel.ker ker) k
 
 DiagonalMap : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → {X : ob (cat C)} → (bin : BinaryProduct C X X) →
               hom (cat C) X (BinaryProduct.A×B bin)
@@ -200,14 +203,18 @@ KernelOfpB C abel bin = kernelConst (IdZeroMap C abel bin)
                                     (IdZeroMapIsMonic C abel bin)
 
 CoKernelOfKernelOfpA : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (abel : Abelian C ) → {X : ob (cat C)} →
-                       (bin : BinaryProduct C X X) → AbEpicsAreCoKernelsNonProp C abel → 
+                       (bin : BinaryProduct C X X) → AbEpicsAreCoKerOfKer C abel →
                        CoKernel C (Abelian.AbHasZero abel) (Kernel.ker (KernelOfpA C abel bin))
-CoKernelOfKernelOfpA C abel bin epic→coKer =
-  isCoKernel→CoKernel C (Abelian.AbHasZero abel) (Kernel.ker (KernelOfpA C abel bin))
-    {!!} {!!}
-  where
-    cok = AbEpicsAreCoKernelsNonProp
+CoKernelOfKernelOfpA C abel bin epic→coKerOfKer =
+  fst (epic→coKerOfKer (BinaryProduct.pA bin)
+                       (BinProdpAIsEpic C bin)
+                       (KernelOfpA C abel bin))
 
--- AbEpicsAreCoKernelsNonProp : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (abel : Abelian C) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
--- AbEpicsAreCoKernelsNonProp C abel = {A B S : ob (cat C)} → (k : hom (cat C) B S) → isEpic C k →
---                                     Σ (hom (cat C) A B) (λ f → isCoKernel C (Abelian.AbHasZero abel) f k)
+CoKernelOfKernelOfpB : {ℓ ℓ' : Level} → (C : UnivalentCategory ℓ ℓ') → (abel : Abelian C ) → {X : ob (cat C)} →
+                       (bin : BinaryProduct C X X) → AbEpicsAreCoKerOfKer C abel →
+                       CoKernel C (Abelian.AbHasZero abel) (Kernel.ker (KernelOfpB C abel bin))
+CoKernelOfKernelOfpB C abel bin epic→coKerOfKer =
+  fst (epic→coKerOfKer (BinaryProduct.pB bin)
+                       (BinProdpBIsEpic C bin)
+                       (KernelOfpB C abel bin))
+

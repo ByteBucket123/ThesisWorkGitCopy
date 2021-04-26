@@ -202,12 +202,17 @@ prodHomo h k = moduleHomo (λ z → (ModuleHomomorphism.h h z) , (ModuleHomomorp
   (λ x y → Σ≡ (ModuleHomomorphism.linear h x y) (ModuleHomomorphism.linear k x y))
   (λ r x → Σ≡ (ModuleHomomorphism.scalar h r x) (ModuleHomomorphism.scalar k r x))
 
+fstHomo : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (A B : Module R) → ModuleHomomorphism R (productOfModules A B) A
+fstHomo A B = moduleHomo fst (λ x y → refl) λ r x → refl
+sndHomo : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (A B : Module R) → ModuleHomomorphism R (productOfModules A B) B
+sndHomo A B = moduleHomo snd (λ x y → refl) λ r x → refl
+
 ProductIsBinaryProduct : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (A B : Precategory.ob (UnivalentCategory.cat (RMod {R = R}))) →
                          isBinaryProduct (RMod {R = R}) A B (productOfModules A B)
 ProductIsBinaryProduct R A B =
   ∣ ((BinProd A×B
-              fstHomo
-              sndHomo
+              (fstHomo A B)
+              (sndHomo A B)
               prodHomo
               (λ f g → ModuleHomo≡ refl)
               (λ f g → ModuleHomo≡ refl)
@@ -218,8 +223,25 @@ ProductIsBinaryProduct R A B =
      refl) ∣
   where
    A×B = productOfModules A B
-   fstHomo = moduleHomo fst (λ x y → refl) λ r x → refl
-   sndHomo = moduleHomo snd (λ x y → refl) λ r x → refl
+   
+ProductIsBinaryProductNonTrunc : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
+                                 (A B : Precategory.ob (UnivalentCategory.cat (RMod {R = R}))) →
+                                 BinaryProduct RMod A B
+ProductIsBinaryProductNonTrunc R A B =
+  (BinProd A×B
+            (fstHomo A B)
+            (sndHomo A B)
+            prodHomo
+            (λ f g → ModuleHomo≡ refl)
+            (λ f g → ModuleHomo≡ refl)
+            λ f g h fsth=f sndh=g →
+              ModuleHomo≡ (funExt (λ x → Σ≡
+                (sym λ i → ModuleHomomorphism.h (fsth=f i) x)
+                (sym (λ i → ModuleHomomorphism.h (sndh=g i) x)))))
+    where
+     A×B = productOfModules A B
+--   fstHomo = moduleHomo fst (λ x y → refl) λ r x → refl
+--   sndHomo = moduleHomo snd (λ x y → refl) λ r x → refl
 
 hasAllBinaryProductsRMod : {ℓ : Level} → (R : CommutativeRing {ℓ}) → hasAllBinaryProducts (RMod {R = R})
 hasAllBinaryProductsRMod R A B = ∣ ((productOfModules A B) , (ProductIsBinaryProduct R A B)) ∣
@@ -331,6 +353,33 @@ ProductIsBinaryCoProduct R A B =
                ModuleHomoComp pB (coProdHomo f g) ≡ g
       pBcomp f g = ModuleHomo≡ (funExt (λ x → ModuleHomomorphismAddHomZeroSym x f g))
 
+ProductIsBinaryCoProductNonTrunc : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
+                                   (A B : Precategory.ob (UnivalentCategory.cat (RMod {R = R}))) →
+                                   BinaryCoProduct RMod A B
+ProductIsBinaryCoProductNonTrunc R A B =
+  (BinCoProd A×B pA pB coProdHomo pAcomp pBcomp 
+      λ k u h ha0=k h0b=u →
+        HelpCoProdUnique k u h (λ i → ModuleHomomorphism.h (ha0=k i))
+                               (λ i → ModuleHomomorphism.h (h0b=u i))
+                               (λ i → ModuleHomomorphism.h (pAcomp k u i))
+                                λ i → ModuleHomomorphism.h (pBcomp k u i))
+    where
+      A×B = productOfModules A B
+      pA : ModuleHomomorphism R A A×B
+      pA = moduleHomo (λ x → x , (Module.0m B))
+                      (λ x y → sym (Σ≡ refl (ModuleZeroRight {M = B} (Module.0m B))))
+                      λ r x → sym (Σ≡ refl (ModuleMulPresZero {M = B} r)) 
+      pB : ModuleHomomorphism R B A×B
+      pB = moduleHomo (λ x → (Module.0m A) , x)
+                      (λ x y → Σ≡ (sym (ModuleZeroRight {M = A} (Module.0m A))) refl)
+                      λ r x → Σ≡ (sym (ModuleMulPresZero {M = A} r)) refl
+      pAcomp : {Z : Module R} → (f : ModuleHomomorphism R A Z) → (g : ModuleHomomorphism R B Z) →
+               ModuleHomoComp pA (coProdHomo f g) ≡ f
+      pAcomp f g = ModuleHomo≡ (funExt (λ x → ModuleHomomorphismAddHomZero x f g))
+      pBcomp : {Z : Module R} → (f : ModuleHomomorphism R A Z) → (g : ModuleHomomorphism R B Z) →
+               ModuleHomoComp pB (coProdHomo f g) ≡ g
+      pBcomp f g = ModuleHomo≡ (funExt (λ x → ModuleHomomorphismAddHomZeroSym x f g))
+
 hasAllBinaryCoProductsRMod : {ℓ : Level} → (R : CommutativeRing {ℓ}) → hasAllBinaryCoProducts (RMod {R = R})
 hasAllBinaryCoProductsRMod R A B = ∣ (productOfModules A B) , ProductIsBinaryCoProduct R A B  ∣
 
@@ -410,7 +459,7 @@ makeKernelObjRMod {ℓ = ℓ} R {A = A} {B = B} f =
 hasAllKernelsRMod  : {ℓ : Level} → (R : CommutativeRing {ℓ}) → hasAllKernels (RMod {R = R}) (hasZeroObjectRMod R)
 hasAllKernelsRMod R {A} {B} f =
   ∣ ((makeKernelObjRMod R f) ,
-      (kernelConst fstHomo
+      (kernelConst fstHomo'
         (ModuleHomo≡ (funExt snd))
         (λ h hf=0 →
           (moduleHomo (λ x → (ModuleHomomorphism.h h x) , λ i → ModuleHomomorphism.h (hf=0 i) x)
@@ -420,7 +469,7 @@ hasAllKernelsRMod R {A} {B} f =
         λ D g h gker=hker → ModuleHomo≡ (funExt (λ x → HelpFiber≡ (isSetModule B)
           (funExt⁻ (λ i → ModuleHomomorphism.h (gker=hker i)) x))))) ∣
     where
-      fstHomo = moduleHomo fst (λ x y → refl) λ r x → refl
+      fstHomo' = moduleHomo fst (λ x y → refl) λ r x → refl
 
 --TODO : FIX
 --Only used to help with elimination later.
@@ -429,7 +478,7 @@ hasAllKernelsRModNonTrunk  : {ℓ : Level} → (R : CommutativeRing {ℓ}) →
                              Σ (Precategory.ob (RModPreCat R)) (λ S → Kernel (RMod {R = R}) {S = S} (hasZeroObjectRMod R) f)
 hasAllKernelsRModNonTrunk R {A} {B} f =
   ((makeKernelObjRMod R f) ,
-    (kernelConst fstHomo
+    (kernelConst fstHomo'
       (ModuleHomo≡ (funExt snd))
       (λ h hf=0 →
         (moduleHomo (λ x → (ModuleHomomorphism.h h x) , λ i → ModuleHomomorphism.h (hf=0 i) x)
@@ -439,7 +488,7 @@ hasAllKernelsRModNonTrunk R {A} {B} f =
       λ D g h gker=hker → ModuleHomo≡ (funExt (λ x → HelpFiber≡ (isSetModule B)
         (funExt⁻ (λ i → ModuleHomomorphism.h (gker=hker i)) x)))))
     where
-      fstHomo = moduleHomo fst (λ x y → refl) λ r x → refl
+      fstHomo' = moduleHomo fst (λ x y → refl) λ r x → refl
 --      sndHomo = moduleHomo snd (λ x y → refl) λ r x → refl
 --hasAllKernelsRMod R {A} {B} f = | makeKernelObjRMod f ,  kernelConst fst (funExt snd) (λ h hf=0 →
 --  moduleHomo (λ x → ModuleHomomorphism.h h x, funExt⁻ hf=0 x)
