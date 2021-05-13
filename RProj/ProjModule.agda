@@ -14,6 +14,7 @@ open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.HLevels
 open import Cubical.Data.Sigma.Properties
 open import Cubical.Foundations.Equiv
+open import Cubical.HITs.PropositionalTruncation.Properties
 
 --isProjectiveModule : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (P : Module R) → Type (ℓ-suc ℓ)
 --isProjectiveModule R P = {E X : Module R} → (f : ModuleHomomorphism R P X) →
@@ -72,7 +73,9 @@ ModuleProjIso = iso (λ P → (ProjModule→Module P) , ((IsProjModule.isProject
                     λ z → refl 
 
 isPropisProj : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → isProp (isProjectiveModule R M)
-isPropisProj P p q = implicitFunExt (λ {E} → implicitFunExt (λ {X} → funExt (λ f → funExt (λ e → funExt (λ esurj → isPropIsContr _ _)))))
+isPropisProj P p q = implicitFunExt (λ {E} → implicitFunExt (λ {X} → funExt (λ f → funExt (λ e → funExt (λ esurj → propTruncIsProp _ _)))))
+
+--implicitFunExt (λ {E} → implicitFunExt (λ {X} → funExt (λ f → funExt (λ e → funExt (λ esurj → isPropIsContr _ _)))))
 
 --inhProp→isContr
 

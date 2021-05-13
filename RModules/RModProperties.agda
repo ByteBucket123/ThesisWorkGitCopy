@@ -326,6 +326,20 @@ HelpCoProdUnique {M = M} {N = N} {Z = Z} k u h ha0=k h0b=u f×ga0=k f×g0b=u =
 -- --          Precategory.seq (UnivalentCategory.cat C) pA h ≡ f → Precategory.seq (UnivalentCategory.cat C) pB h ≡ g →
 -- --          < f × g > ≡ h
 
+
+pACoProd : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (A B : Precategory.ob (UnivalentCategory.cat (RMod {R = R}))) →
+           ModuleHomomorphism R A (productOfModules A B)
+pACoProd R A B =
+  moduleHomo (λ x → x , (Module.0m B))
+             (λ x y → sym (Σ≡ refl (ModuleZeroRight {M = B} (Module.0m B))))
+              λ r x → sym (Σ≡ refl (ModuleMulPresZero {M = B} r)) 
+pBCoProd : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (A B : Precategory.ob (UnivalentCategory.cat (RMod {R = R}))) →
+           ModuleHomomorphism R B (productOfModules A B)
+pBCoProd R A B =
+  moduleHomo (λ x → (Module.0m A) , x)
+             (λ x y → Σ≡ (sym (ModuleZeroRight {M = A} (Module.0m A))) refl)
+              λ r x → Σ≡ (sym (ModuleMulPresZero {M = A} r)) refl
+
 ProductIsBinaryCoProduct : {ℓ : Level} → (R : CommutativeRing {ℓ}) → (A B : Precategory.ob (UnivalentCategory.cat (RMod {R = R}))) →
                            isBinaryCoProduct RMod A B (productOfModules A B)
 ProductIsBinaryCoProduct R A B =
@@ -339,13 +353,9 @@ ProductIsBinaryCoProduct R A B =
     where
       A×B = productOfModules A B
       pA : ModuleHomomorphism R A A×B
-      pA = moduleHomo (λ x → x , (Module.0m B))
-                      (λ x y → sym (Σ≡ refl (ModuleZeroRight {M = B} (Module.0m B))))
-                      λ r x → sym (Σ≡ refl (ModuleMulPresZero {M = B} r)) 
+      pA = pACoProd R A B 
       pB : ModuleHomomorphism R B A×B
-      pB = moduleHomo (λ x → (Module.0m A) , x)
-                      (λ x y → Σ≡ (sym (ModuleZeroRight {M = A} (Module.0m A))) refl)
-                      λ r x → Σ≡ (sym (ModuleMulPresZero {M = A} r)) refl
+      pB = pBCoProd R A B
       pAcomp : {Z : Module R} → (f : ModuleHomomorphism R A Z) → (g : ModuleHomomorphism R B Z) →
                ModuleHomoComp pA (coProdHomo f g) ≡ f
       pAcomp f g = ModuleHomo≡ (funExt (λ x → ModuleHomomorphismAddHomZero x f g))
@@ -366,13 +376,9 @@ ProductIsBinaryCoProductNonTrunc R A B =
     where
       A×B = productOfModules A B
       pA : ModuleHomomorphism R A A×B
-      pA = moduleHomo (λ x → x , (Module.0m B))
-                      (λ x y → sym (Σ≡ refl (ModuleZeroRight {M = B} (Module.0m B))))
-                      λ r x → sym (Σ≡ refl (ModuleMulPresZero {M = B} r)) 
+      pA = pACoProd R A B 
       pB : ModuleHomomorphism R B A×B
-      pB = moduleHomo (λ x → (Module.0m A) , x)
-                      (λ x y → Σ≡ (sym (ModuleZeroRight {M = A} (Module.0m A))) refl)
-                      λ r x → Σ≡ (sym (ModuleMulPresZero {M = A} r)) refl
+      pB = pBCoProd R A B
       pAcomp : {Z : Module R} → (f : ModuleHomomorphism R A Z) → (g : ModuleHomomorphism R B Z) →
                ModuleHomoComp pA (coProdHomo f g) ≡ f
       pAcomp f g = ModuleHomo≡ (funExt (λ x → ModuleHomomorphismAddHomZero x f g))

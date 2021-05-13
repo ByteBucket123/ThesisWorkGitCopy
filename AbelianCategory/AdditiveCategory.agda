@@ -58,6 +58,7 @@ record BinDirectSum {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') (a b : ob (cat C
     in2p2 : ((cat C) , in2 ∘ p2) ≡ id (cat C) b
     p1in1+p2in2 : (C , (PreAdditiveCategory.isAbHomSet isPreAdd) , (cat C) , p1 ∘ in1 +PreAdd ((cat C) , p2 ∘ in2)) ≡ id (cat C) co
 
+--TODO: Truncate hasBinDirSum.
 record AdditiveCategory {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') : Type (ℓ-suc (ℓ-max ℓ  ℓ')) where
   constructor addCat
   field

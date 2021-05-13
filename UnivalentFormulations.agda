@@ -226,7 +226,7 @@ module _ {ℓ ℓ' : Level} {C : Precategory ℓ ℓ'} (isocat : (x y : ob C) �
         (λ z → refl)
          λ z → refl
 
-  LiftUnivAltHelpΣ : {x y : Precategory.ob C} →
+  LiftUnivAltHelpΣ : {x : Precategory.ob C} →
                      Iso (Lift {ℓ-max ℓ ℓ'} {ℓ'} (Σ (ob C) (λ y → CatIso {C = C} x y)))
                          (Σ (ob (PreCatLift C)) (λ y → CatIso {C = PreCatLift C} (lift x) y))
   LiftUnivAltHelpΣ =
@@ -237,7 +237,7 @@ module _ {ℓ ℓ' : Level} {C : Precategory ℓ ℓ'} (isocat : (x y : ob C) �
 
   isPropΣCatIso : {x y : Precategory.ob C} → isProp (Σ (ob C) (λ y → CatIso {C = C} x y))
   isPropΣCatIso {x} {y} a b =
-    lowerExt (isContr→isProp (transport (cong isContr (sym (ua (isoToEquiv (LiftUnivAltHelpΣ {y = y})))))
+    lowerExt (isContr→isProp (transport (cong isContr (sym (ua (isoToEquiv LiftUnivAltHelpΣ))))
       (isUnivalentAlt.univ LiftUnivAlt (lift x))) (lift a) (lift b))
 
   isUnivAlt : isUnivalentAlt C

@@ -54,6 +54,7 @@ open import ThesisWork.BasicCategoryTheory.IsomorphismHelp
 
 open import ThesisWork.RModules.RModProperties
 
+--Might take a long time to type check.
 epicsAreCokernelsRMod : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B : Precategory.ob (RModPreCat R)} →
                         (f : Precategory.hom (RModPreCat R) A B) → isEpic (RMod {R = R}) f →
                         ∥ Σ (Precategory.ob (RModPreCat R))
@@ -62,8 +63,8 @@ epicsAreCokernelsRMod : {ℓ : Level} → (R : CommutativeRing {ℓ}) → {A B :
 epicsAreCokernelsRMod R {A} {B} f fEpic =
   ∣ (fst fKer ,
     (Kernel.ker (snd fKer)) , {!!}) ∣
---    transport (cong (isCoKernel (RMod {R = R}) (hasZeroObjectRMod R) (Kernel.ker (snd fKer))) incEqKer∘mapf=f)
---              (PostcompIsoPreserveCoKernel incEqKer ker catIsoEqKer (hasZeroObjectRMod R) incEqcoKer) ) ∣
+--      transport (cong (isCoKernel (RMod {R = R}) (hasZeroObjectRMod R) (Kernel.ker (snd fKer))) incEqKer∘mapf=f)
+--                (PostcompIsoPreserveCoKernel incEqKer ker catIsoEqKer (hasZeroObjectRMod R) incEqcoKer) ) ∣
     where
       _∘_ : {A B D : Precategory.ob (RModPreCat R)} → Precategory.hom (RModPreCat R) A B →
             Precategory.hom (RModPreCat R) B D → Precategory.hom (RModPreCat R) A D
@@ -117,7 +118,6 @@ epicsAreCokernelsRMod R {A} {B} f fEpic =
 --        elim2 {B = λ a b → a ≡ b} (λ a b → isProp→isSet (squash/ _ _)) {!!} {!!} {!!}
 --          (ModuleHomomorphism.h g x) (ModuleHomomorphism.h h x)))
 
---TODO
       elimTrunk : (b : ⟨ B ⟩M) → Σ ⟨ EquivKernelObj f ⟩M (λ [a] → b ≡ ModuleHomomorphism.h mapf [a])
       elimTrunk b = recHprop (λ ([a] , b=f[a]) ([c] , b=f[c]) → Σ≡ (HelpEq/ [a] [c] (λ (a' , [a']=[a]) (c' , [c']=[c]) →
                              eq/ a' c'
@@ -129,11 +129,6 @@ epicsAreCokernelsRMod R {A} {B} f fEpic =
                              (toPathP (isSetModule B _ _ _ _)))
                              (λ (a , b=fa) → [ a ] , b=fa)
                              (EpicAreSurj R f fEpic b)
-
---recHprop {P = {!Σ ? ?!}} --Σ ⟨ EquivKernelObj f ⟩M (λ [a] → b ≡ ModuleHomomorphism.h mapf [a])}
---       {!!} {!!} {!!} {!!}
-
---elimHprop {!!} (λ (a , b=fa) → ?) (EpicAreSurj R f fEpic b)
 
       mapfInv' = λ b → fst (elimTrunk b)
       mapfInv'∘mapf'=id : (λ x → mapfInv' (mapf' x)) ≡ (λ x → x)
@@ -149,36 +144,12 @@ epicsAreCokernelsRMod R {A} {B} f fEpic =
       mapf'∘mapfInv'=id : (λ x → mapf' (mapfInv' x)) ≡ (λ x → x)
       mapf'∘mapfInv'=id = funExt (λ b → sym (snd (elimTrunk b)))
 
+------This is the step that eats all the compilation time...
 --      mapfInv : ModuleHomomorphism R B (EquivKernelObj f)
---      mapfInv = ModuleHomoInvIsHomo (EquivKernelObj f) B mapf mapfInv' mapf'∘mapfInv'=id {!mapfInv'∘mapf'=id!}
-
-
-
-
---                           (λ x y → mapfInv' (x +B y)          ≡⟨ cong₂ (λ x y → mapfInv' (x +B y))
---                                                                  (sym (funExt⁻ mapf'∘mapfInv'=id x))
---                                                                  (sym (funExt⁻ mapf'∘mapfInv'=id y))  ⟩
---                                    mapfInv' ((mapf' (mapfInv' x)) +B (mapf' (mapfInv' y)))
---                                                                 ≡⟨ cong mapfInv' (sym (ModuleHomomorphism.linear mapf
---                                                                                         (mapfInv' x) (mapfInv' y)))  ⟩
---                                    mapfInv' (mapf' ((mapfInv' x) +K (mapfInv' y)))
---                                                                 ≡⟨ funExt⁻ mapfInv'∘mapf'=id ((mapfInv' x) +K (mapfInv' y))  ⟩
---                                    ((mapfInv' x) +K (mapfInv' y)) ∎)
---                             ?
-
---                           λ r b → mapfInv' (r ⋆B b)            ≡⟨ cong (λ b → mapfInv' (r ⋆B b))
---                                                                   (sym (funExt⁻ mapf'∘mapfInv'=id b)) ⟩
---                                   mapfInv' (r ⋆B (mapf' (mapfInv' b))) ≡⟨ cong  mapfInv' (sym (ModuleHomomorphism.linear mapf r
---                                                                           (mapfInv' b))) ⟩
---                                   mapfInv' (mapf' (r ⋆K (mapfInv' b))) ≡⟨ funExt⁻ mapfInv'∘mapf'=id (r ⋆K (mapfInv' b)) ⟩
---                                   r ⋆K (mapfInv' b) ∎
-
---                           (λ x y → mapfInv' (x +B y) ≡⟨ {!!} ⟩
---                                    {!_+K_!} ∎)
---                           {!!}
+--      mapfInv = ModuleHomoInvIsHomo (EquivKernelObj f) B mapf mapfInv' mapf'∘mapfInv'=id mapfInv'∘mapf'=id
 
 --      catIsoEqKer : CatIso (EquivKernelObj f) B
---      catIsoEqKer = catiso mapf {!!} {!!} {!!}
+--      catIsoEqKer = catiso mapf mapfInv mapfInv'∘mapf'=id mapf'∘mapfInv'=id
 
       h'Help : (E : Module R) → (h : ModuleHomomorphism R A E) → ker ∘ h ≡ 0a (makeKernelObjRMod R f) E →
                Σ (ModuleHomomorphism R (EquivKernelObj f) E)

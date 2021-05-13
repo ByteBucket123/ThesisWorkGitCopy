@@ -104,3 +104,16 @@ canEliminateDuplicates R M {n} (g1 ∷ g2 ∷ gVec) m k g1=g2 finGengVec =
       restR g = tail (tail (rVec g))
       rest : (g : ⟨ M ⟩M) → ⟨ M ⟩M
       rest g = (sumGenerators R M gVec (tail (tail (rVec g))))
+
+--****************************************************** NrOfGenerators *******************************************
+
+NGenerators : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (n : ℕ) → Type ℓ
+NGenerators {R = R} M n = Σ (Vec ⟨ M ⟩M n) (λ V → (g : ⟨ M ⟩M) →
+                             Σ (Vec ⟨ R ⟩ n) λ r → sumGenerators R M V r ≡ g)
+
+hasNGenerators : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (n : ℕ) → Type ℓ
+hasNGenerators {R = R} M n = ∥ NGenerators M n ∥
+
+hasNGeneratorsIsProp : {ℓ : Level} → {R : CommutativeRing {ℓ}} → (M : Module R) → (n : ℕ) → isProp (hasNGenerators M n)
+hasNGeneratorsIsProp M n = propTruncIsProp
+
