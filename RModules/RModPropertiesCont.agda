@@ -130,6 +130,7 @@ epicsAreCokernelsRMod R {A} {B} f fEpic =
                              (λ (a , b=fa) → [ a ] , b=fa)
                              (EpicAreSurj R f fEpic b)
 
+      mapfInv' : ⟨ B ⟩M → ⟨ EquivKernelObj f ⟩M
       mapfInv' = λ b → fst (elimTrunk b)
       mapfInv'∘mapf'=id : (λ x → mapfInv' (mapf' x)) ≡ (λ x → x)
       mapfInv'∘mapf'=id = funExt (λ x → HelpEq/ (mapfInv' (mapf' x)) x
