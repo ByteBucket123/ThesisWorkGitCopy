@@ -26,6 +26,7 @@ private
 
 --******************************************** Data structures ***********************************************************
 
+--TODO: Truncate AbGroudStr, but this makes it more messy...
 record CategoryWithAbHomSets {ℓ ℓ'} (C : UnivalentCategory ℓ ℓ') : Type (ℓ-suc (ℓ-max ℓ  ℓ')) where
   constructor abHomSets
   field
